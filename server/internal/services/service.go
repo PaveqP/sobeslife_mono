@@ -18,10 +18,17 @@ type Tests interface {
 	Generate(testParameters utils.CreateTestRequest) (utils.TestResponse, error)
 }
 
+type Shared interface {
+	GetAllProfessions() ([]utils.Profession, error)
+	GetModulesByFilters(profession string) ([]utils.Chapter, error)
+	GetTechnologiesByFilters(module string) ([]utils.Technology, error)
+}
+
 type Service struct {
 	Authorization
 	Questions
 	Tests
+	Shared
 }
 
 func NewService(repo *repository.Repository) *Service {
@@ -29,5 +36,6 @@ func NewService(repo *repository.Repository) *Service {
 		Authorization: newAuthService(repo),
 		Questions:     newQuestionService(repo),
 		Tests:         newTestsService(repo),
+		Shared:        newSharedService(repo),
 	}
 }

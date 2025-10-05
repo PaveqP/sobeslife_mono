@@ -28,23 +28,23 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	// }
 	api := router.Group("/api")
 	{
-		// professions := api.Group("/professions")
-		// {
-		// 	professions.GET("/")
-		// 	professions.GET("/:id")
-		// }
-		// modules := api.Group("/modules")
-		// {
-		// 	modules.GET("/")
-		// 	modules.GET("/profession/:id")
-		// 	modules.GET("/:id")
-		// }
-		// technology := api.Group("/technology")
-		// {
-		// 	technology.GET("/")
-		// 	technology.GET("/module/:id")
-		// 	technology.GET("/:id")
-		// }
+		professions := api.Group("/professions")
+		{
+			professions.GET("/", h.getAllProfessions)
+			//professions.GET("/:id")
+		}
+		modules := api.Group("/modules")
+		{
+			modules.GET("/", h.getModulesByFilters)
+			//modules.GET("/:id")
+			//modules.GET("/profession/:id")
+		}
+		technology := api.Group("/technologies")
+		{
+			technology.GET("/", h.getTechnologiesByFilters)
+			// technology.GET("/:id")
+			// technology.GET("/module/:id")
+		}
 		question := api.Group("/questions")
 		{
 			question.GET("/", h.getQuestionsByFilters)

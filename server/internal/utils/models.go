@@ -20,11 +20,16 @@ const (
 )
 
 type Profession struct {
-	ID   int    `json:"id" db:"id"`
+	ID   string `json:"id" db:"id"`
 	Name string `json:"name" db:"name"`
 }
 
 type Technology struct {
-	ID   int    `json:"id" db:"id"`
+	ID   string `json:"id" db:"id"`
+	Name string `json:"name" db:"name"`
+}
+
+type Chapter struct {
+	ID   string `json:"id" db:"id"`
 	Name string `json:"name" db:"name"`
 }

@@ -19,10 +19,17 @@ type Tests interface {
 	Generate(testParameters utils.CreateTestRequest, questions []string) (utils.Test, error)
 }
 
+type Shared interface {
+	GetAllProfessions() ([]utils.Profession, error)
+	GetModulesByFilters(profession string) ([]utils.Chapter, error)
+	GetTechnologiesByFilters(module string) ([]utils.Technology, error)
+}
+
 type Repository struct {
 	Authorization
 	Questions
 	Tests
+	Shared
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -30,5 +37,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Authorization: newAuthRepository(db),
 		Questions:     newQuestionRepository(db),
 		Tests:         newTestsRepository(db),
+		Shared:        newSharedRepository(db),
 	}
 }
