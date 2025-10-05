@@ -1,0 +1,100 @@
+@startuml
+
+Class User {
+    id SERIAL PRIMARY KEY,
+    nickname VARCHAR(100),
+    email VARCHAR(100),
+    phone_number VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(200) NOT NULL UNIQUE,
+    date_of_birth DATE,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    profession_id INT REFERENCES profession (id) ON DELETE SET NULL,
+    grade ENUM<'trainee', 'junior', 'middle', 'senior'>
+}
+
+Class Profession {
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(300)
+}
+
+class ProfessionChapter {
+    id SERIAL PRIMARY KEY,
+    profession_id INT REFERENCES profession (id) ON DELETE CASCADE,
+    chapter_id INT REFERENCES chapter (id) ON DELETE CASCADE
+}
+
+Class Chapter {
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(300)
+}
+
+Class Technology {
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(300)
+}
+
+Class chapterTechnology {
+    id SERIAL PRIMARY KEY,
+    chapter_id INT REFERENCES chapter (id) ON DELETE CASCADE,
+    technology_id INT REFERENCES technology (id) ON DELETE CASCADE
+}
+
+Class Test {
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(100),
+    profession_id INT REFERENCES profession (id) ON DELETE CASCADE,
+    technology_id INT REFERENCES technology (id) ON DELETE CASCADE,
+    chapter_id INT REFERENCES chapter (id) ON DELETE CASCADE NOT NULL,
+    level ENUM<'trainee', 'junior', 'middle', 'senior'>
+}
+
+Class Question {
+    id SERIAL PRIMARY KEY,
+    text TEXT NOT NULL,
+    correct_answer VARCHAR(400),
+    profession_id INT REFERENCES profession (id) ON DELETE CASCADE NOT NULL,
+    chapter_id INT REFERENCES chapter (id) ON DELETE CASCADE NOT NULL,
+    technology_id INT REFERENCES technology (id) ON DELETE CASCADE NOT NULL,
+	level ENUM<'trainee', 'junior', 'middle', 'senior'>
+}
+
+class QuestionTechnology {
+    id SERIAL PRIMARY KEY,
+    question_id INT REFERENCES question (id) ON DELETE CASCADE NOT NULL,
+    technology_id INT REFERENCES technology (id) ON DELETE CASCADE NOT NULL
+}
+
+class TestQuestion {
+    id SERIAL PRIMARY KEY,
+    test_id INT REFERENCES test (id) ON DELETE CASCADE NOT NULL,
+    question_id INT REFERENCES question (id) ON DELETE CASCADE NOT NULL,
+    verdict BOOLEAN NOT NULL
+}
+
+class UserTest {
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES user (id) ON DELETE CASCADE NOT NULL,
+    test_id INT REFERENCES test (id) ON DELETE CASCADE NOT NULL
+}
+
+User --> UserTest : one-to-many
+
+Profession --> User : one-to-many
+Profession --> Test : one-to-many
+Profession --> Question : one-to-many
+Profession --> ProfessionChapter : one-to-many
+
+chapter --> ProfessionChapter : one-to-many
+chapter --> chapterTechnology : one-to-many
+
+Technology --> Test : one-to-many
+Technology --> QuestionTechnology : one-to-many
+Technology --> chapterTechnology : one-to-many
+
+Test --> TestQuestion : one-to-many
+Test --> UserTest : one-to-many
+
+Question --> QuestionTechnology : one-to-many
+Question --> TestQuestion : one-to-many
+
+@enduml

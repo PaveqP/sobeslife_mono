@@ -1,0 +1,13 @@
+version: "1"
+
+tasks:
+  run:
+    desc: "Запустить проект"
+    cmds:
+      - go run cmd/main.go
+  start-db:
+    desc: "Запустить контейнер БД"
+    cmds:
+      - docker run --name=sobeslife-db -e POSTGRES_DB=sobeslife_db -e POSTGRES_PASSWORD='paveq123' -d --rm -p 5454:5432 postgres
+
+

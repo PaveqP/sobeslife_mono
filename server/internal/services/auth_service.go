@@ -1,8 +1,8 @@
 package services
 
 import (
+	"sobeslife-services/internal/repository"
 	"sobeslife-services/internal/utils"
-	"sobeslife-services/pkg/repository"
 )
 
 type AuthService struct {

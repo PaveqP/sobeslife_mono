@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: Test Management API
+  version: 1.0.0
+  description: API для генерации, прохождения и анализа тестов по направлениям, технологиям и уровням подготовки.
+
+paths:
+  /questions:
+    get:
+      summary: Получить список вопросов (админ/внутренний сервис)
+      tags: [Admin]
+      parameters:
+        - in: query
+          name: direction
+          schema: { type: string }
+        - in: query
+          name: technology
+          schema: { type: string }
+        - in: query
+          name: level
+          schema: { type: string, enum: [junior, middle, senior] }
+      responses:
+        "200":
+          description: Список вопросов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  /tests/generate:
+    post:
+      summary: Сгенерировать тесты по направлению и технологиям
+      tags: [User]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestGenerationRequest"
+      responses:
+        "200":
+          description: Список сгенерированных тестов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Test"
+
+  /tests:
+    get:
+      summary: Получить список доступных тестов с фильтрацией
+      tags: [User]
+      parameters:
+        - in: query
+          name: direction
+          schema: { type: string }
+        - in: query
+          name: technology
+          schema: { type: string }
+        - in: query
+          name: level
+          schema: { type: string, enum: [junior, middle, senior] }
+      responses:
+        "200":
+          description: Список тестов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestSummary"
+
+  /tests/{testId}/start:
+    post:
+      summary: Начать прохождение теста
+      tags: [User]
+      parameters:
+        - in: path
+          name: testId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Вопросы теста
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+
+  /tests/{testId}/submit:
+    post:
+      summary: Отправить ответы на тест
+      tags: [User]
+      parameters:
+        - in: path
+          name: testId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestSubmission"
+      responses:
+        "200":
+          description: Результат теста
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestResult"
+
+  /tests/statistics:
+    get:
+      summary: Просмотр статистики пользователя
+      tags: [User]
+      responses:
+        "200":
+          description: Статистика пользователя
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStatistics"
+
+  /tests/verify-answer:
+    post:
+      summary: Проверка ответа пользователя на вопрос
+      tags: [User, Test]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerVerificationRequest"
+      responses:
+        "200":
+          description: Результат проверки ответа
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerVerificationResult"
+            
+  /questions/{questionId}/stats:
+    get:
+      summary: Получение статистики по вопросу
+      tags: [User, Analytics]
+      parameters:
+        - name: questionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Статистика по вопросу
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionStats"
+
+
+components:
+  schemas:
+
+    Question:
+      type: object
+      properties:
+        id: { type: string }
+        text: { type: string }
+        options:
+          type: array
+          items: { type: string }
+        correctAnswer: { type: string }
+        tags:
+          type: object
+          properties:
+            direction: { type: string }
+            technology:
+              type: array
+              items: { type: string }
+            level: { type: string, enum: [junior, middle, senior] }
+
+    TestGenerationRequest:
+      type: object
+      required: [direction, technologies]
+      properties:
+        direction: { type: string }
+        technologies:
+          type: array
+          items: { type: string }
+
+    Test:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        direction: { type: string }
+        technology: { type: string }
+        level: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+
+    TestSummary:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        direction: { type: string }
+        technology: { type: string }
+        level: { type: string }
+
+    TestSubmission:
+      type: object
+      properties:
+        answers:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId: { type: string }
+              selectedAnswer: { type: string }
+
+    TestResult:
+      type: object
+      properties:
+        score: { type: number }
+        totalQuestions: { type: integer }
+        correctAnswers: { type: integer }
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId: { type: string }
+              correctAnswer: { type: string }
+              selectedAnswer: { type: string }
+              isCorrect: { type: boolean }
+
+    UserStatistics:
+      type: object
+      properties:
+        totalTestsTaken: { type: integer }
+        averageScore: { type: number }
+        passedTests:
+          type: array
+          items:
+            type: object
+            properties:
+              testId: { type: string }
+              score: { type: number }
+              passedAt: { type: string, format: date-time }
+
+    AnswerVerificationRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        questionId:
+          type: string
+        selectedOption:
+          type: string
+
+    AnswerVerificationResult:
+      type: object
+      properties:
+        correct:
+          type: boolean
+        correctAnswer:
+          type: string
+        explanation:
+          type: string
+        scoreDelta:
+          type: number
+        totalScore:
+          type: number
+
+    QuestionStats:
+      type: object
+      properties:
+        questionId:
+          type: string
+        timesAnswered:
+          type: integer
+        correctCount:
+          type: integer
+        incorrectCount:
+          type: integer
+        correctRate:
+          type: number
+          format: float
+
+
