@@ -3,9 +3,9 @@ package repository
 import (
 	"fmt"
 	"sobeslife-services/internal/utils"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/sirupsen/logrus"
 )
 
 type QuestionRepository struct {
@@ -16,74 +16,49 @@ func newQuestionRepository(db *sqlx.DB) *QuestionRepository {
 	return &QuestionRepository{db}
 }
 
-func (qr *QuestionRepository) GetAllQuestions() ([]utils.Question, error) {
-	tableName := "question"
-	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+func (qr *QuestionRepository) GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error) {
+	table_name := "question"
+	baseQuery := fmt.Sprintf(`SELECT 
+	q.text, q.correct_answer, q.expertise_level, p.name as profession, c.name as chapter, t.name as technology FROM %s q 
+	JOIN profession p ON q.profession_id = p.id 
+	JOIN chapter c ON q.chapter_id = c.id 
+	LEFT JOIN technology t 
+	ON q.technology_id = t.id`, table_name)
+	whereClause, params := qr.buildWhereClause(filters)
+	query := baseQuery + whereClause
 
-	var result []utils.Question
+	var result []utils.QuestionResponse
+	err := qr.db.Select(&result, query, params...)
 
-	err := qr.db.Select(&result, query)
-	if err != nil {
-		logrus.Error("Extract data failed: ", err)
-		return nil, err
-	}
-
-	return result, nil
+	return result, err
 }
 
-func (qr *QuestionRepository) GetQuestionsByProfession(professionId string) ([]utils.Question, error) {
-	tableName := "question"
-	query := fmt.Sprintf("SELECT * FROM %s WHERE profession_id = $1", tableName)
+func (qr *QuestionRepository) buildWhereClause(filters utils.QuestionFilters) (string, []interface{}) {
+	conditions := []string{}
+	params := []interface{}{}
+	paramCount := 0
 
-	var result []utils.Question
-
-	err := qr.db.Select(&result, query, professionId)
-	if err != nil {
-		logrus.Error("Extract data failed: ", err)
-		return nil, err
+	if filters.Profession != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("p.name = $%d", paramCount))
+		params = append(params, filters.Profession)
 	}
 
-	return result, nil
-}
-func (qr *QuestionRepository) GetQuestionsByModule(moduleId string) ([]utils.Question, error) {
-	tableName := "question"
-	query := fmt.Sprintf("SELECT * FROM %s WHERE chapter_id = $1", tableName)
-
-	var result []utils.Question
-
-	err := qr.db.Select(&result, query, moduleId)
-	if err != nil {
-		logrus.Error("Extract data failed: ", err)
-		return nil, err
+	if filters.Module != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("c.name = $%d", paramCount))
+		params = append(params, filters.Module)
 	}
 
-	return result, nil
-}
-func (qr *QuestionRepository) GetQuestionsByTechnology(technologyId string) ([]utils.Question, error) {
-	tableName := "question"
-	query := fmt.Sprintf("SELECT * FROM %s WHERE technology_id = $1", tableName)
-
-	var result []utils.Question
-
-	err := qr.db.Select(&result, query, technologyId)
-	if err != nil {
-		logrus.Error("Extract data failed: ", err)
-		return nil, err
+	if filters.Technology != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("t.name = $%d", paramCount))
+		params = append(params, filters.Technology)
 	}
 
-	return result, nil
-}
-func (qr *QuestionRepository) GetQuestionsForTest(professionId string, moduleId string, technologyId string) ([]utils.Question, error) {
-	tableName := "question"
-	query := fmt.Sprintf("SELECT * FROM %s WHERE profession_id = $1 AND chapter_id = $2 AND technology_id = $3", tableName)
-
-	var result []utils.Question
-
-	err := qr.db.Select(&result, query, professionId, moduleId, technologyId)
-	if err != nil {
-		logrus.Error("Extract data failed: ", err)
-		return nil, err
+	if len(conditions) > 0 {
+		return " WHERE " + strings.Join(conditions, " AND "), params
 	}
 
-	return result, nil
+	return "", params
 }

@@ -1,10 +1,10 @@
-version: "1"
+version: "3"
 
 tasks:
   run:
     desc: "Запустить проект"
     cmds:
-      - go run cmd/main.go
+      - go run cmd/application/main.go
   start-db:
     desc: "Запустить контейнер БД"
     cmds:

@@ -11,11 +11,7 @@ type Authorization interface {
 }
 
 type Questions interface {
-	GetAllQuestions() ([]utils.Question, error)
-	GetQuestionsByProfession(professionId string) ([]utils.Question, error)
-	GetQuestionsByModule(moduleId string) ([]utils.Question, error)
-	GetQuestionsByTechnology(technologyId string) ([]utils.Question, error)
-	GetQuestionsForTest(professionId string, moduleId string, technologyId string) ([]utils.Question, error)
+	GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error)
 }
 
 type Service struct {

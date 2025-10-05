@@ -45,13 +45,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		// 	technology.GET("/module/:id")
 		// 	technology.GET("/:id")
 		// }
-		question := api.Group("/question")
+		question := api.Group("/questions")
 		{
-			question.GET("/", h.getAllQuestions)
-			question.GET("/profession/:id", h.getQuestionsByProfession)
-			question.GET("/module/:id", h.getQuestionsByModule)
-			question.GET("/technology/:id", h.getQuestionsByTechnology)
-			//question.GET("/profession:id/module:id/technology:id")
+			question.GET("/", h.getQuestionsByFilters)
 			//question.GET("/:id")
 		}
 	}

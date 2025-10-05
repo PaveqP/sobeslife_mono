@@ -20,6 +20,21 @@ type Question struct {
 	ExpertiseLevel ExpertiseLevel `json:"expertise_level" db:"expertise_level"`
 }
 
+type QuestionResponse struct {
+	Text           string         `json:"text" db:"text"`
+	CorrectAnswer  string         `json:"correct_answer" db:"correct_answer"`
+	Profession     string         `json:"profession" db:"profession"`
+	Chapter        string         `json:"chapter" db:"chapter"`
+	Technology     *string        `json:"technology" db:"technology"`
+	ExpertiseLevel ExpertiseLevel `json:"expertise_level" db:"expertise_level"`
+}
+
+type QuestionFilters struct {
+	Profession string
+	Module     string
+	Technology string
+}
+
 type QuestionTechnology struct {
 	ID           int `json:"id" db:"id"`
 	QuestionID   int `json:"question_id" db:"question_id"`
