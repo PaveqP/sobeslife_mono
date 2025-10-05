@@ -1,3 +1,4 @@
 server/.vscode/
+.vscode
 server/.env
 server/cmd/migrator/

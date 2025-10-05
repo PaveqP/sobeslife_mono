@@ -18,11 +18,8 @@ func newQuestionService(r *repository.Repository) *QuestionService {
 func (qs *QuestionService) GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error) {
 	result, err := qs.r.GetQuestionsByFilters(filters)
 	if err != nil {
-		logrus.Error("Service error", err)
+		logrus.Error("Service error: ", err)
 		return nil, err
 	}
-	// if len(result) == 0 {
-	// 	result = []utils.QuestionResponse{}
-	// }
 	return result, nil
 }

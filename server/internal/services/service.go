@@ -14,14 +14,20 @@ type Questions interface {
 	GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error)
 }
 
+type Tests interface {
+	Generate(testParameters utils.CreateTestRequest) (utils.TestResponse, error)
+}
+
 type Service struct {
 	Authorization
 	Questions
+	Tests
 }
 
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
 		Authorization: newAuthService(repo),
 		Questions:     newQuestionService(repo),
+		Tests:         newTestsService(repo),
 	}
 }

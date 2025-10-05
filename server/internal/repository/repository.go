@@ -15,14 +15,20 @@ type Questions interface {
 	GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error)
 }
 
+type Tests interface {
+	Generate(testParameters utils.CreateTestRequest, questions []string) (utils.Test, error)
+}
+
 type Repository struct {
 	Authorization
 	Questions
+	Tests
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
 		Authorization: newAuthRepository(db),
 		Questions:     newQuestionRepository(db),
+		Tests:         newTestsRepository(db),
 	}
 }

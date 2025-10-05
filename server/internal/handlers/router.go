@@ -50,6 +50,12 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			question.GET("/", h.getQuestionsByFilters)
 			//question.GET("/:id")
 		}
+
+		tests := api.Group("/tests")
+		{
+			//tests.GET("/")
+			tests.POST("/generate", h.generateTest)
+		}
 	}
 
 	return router
