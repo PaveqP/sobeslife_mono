@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"sobeslife-services/internal/services"
+	"sobeslife-services/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,24 +10,25 @@ import (
 
 type Handler struct {
 	services        *services.Service
+	jwt             *utils.JWTService
 	serverStatus    string
 	serverStartTime time.Time
 }
 
-func NewHandler(services *services.Service, serverStatus string, serverStartTime time.Time) *Handler {
-	return &Handler{services, serverStatus, serverStartTime}
+func NewHandler(services *services.Service, jwt *utils.JWTService, serverStatus string, serverStartTime time.Time) *Handler {
+	return &Handler{services, jwt, serverStatus, serverStartTime}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
 	router.GET("/health", h.HealthCheck)
-	// auth := router.Group("/auth")
-	// {
-	// 	auth.POST("/sign-in")
-	// 	auth.POST("/sign-up")
-	// }
-	api := router.Group("/api")
+	auth := router.Group("/auth")
+	{
+		auth.POST("/sign-up", h.signUp)
+		auth.POST("/sign-in", h.signIn)
+	}
+	api := router.Group("/api", h.identifyUser)
 	{
 		professions := api.Group("/professions")
 		{

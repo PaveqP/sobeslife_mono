@@ -7,8 +7,10 @@ import (
 )
 
 type Authorization interface {
-	CreateUser(nickname string, email string, phoneNumber string, password string) (int, error)
+	CreateUser(userParams utils.CreateUserQuery) (string, error)
 	GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error)
+	GetUserByPhoneNumber(phoneNumber string) (*utils.UserIdentity, error)
+	GetIsAdmin(userId string) (bool, error)
 }
 
 type Questions interface {

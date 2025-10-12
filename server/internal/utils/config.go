@@ -10,6 +10,12 @@ import (
 type Config struct {
 	Port string   `yaml:"port" env-default:"8080"`
 	DB   DBConfig `yaml:"db"`
+	JWT  JWTAppConfig
+}
+
+type JWTAppConfig struct {
+	AccessTTL  string
+	RefreshTTL string
 }
 
 type DBConfig struct {

@@ -33,3 +33,22 @@ type Chapter struct {
 	ID   string `json:"id" db:"id"`
 	Name string `json:"name" db:"name"`
 }
+
+type CreateUserQuery struct {
+	Nickname    string `json:"nickname" db:"nickname"`
+	Email       string `json:"email" db:"email"`
+	PhoneNumber string `json:"phone_number" db:"phone_number"`
+	Password    string `json:"password" db:"password"`
+}
+
+type AuthRequest struct {
+	Nickname    *string `json:"nickname" db:"nickname"`
+	Email       *string `json:"email" db:"email"`
+	PhoneNumber *string `json:"phone_number" db:"phone_number"`
+	Password    string  `json:"password" db:"password"`
+}
+
+type UserIdentity struct {
+	UserId         string `json:"user_id" db:"id"`
+	HashedPassword string `json:"password" db:"password_hash"`
+}

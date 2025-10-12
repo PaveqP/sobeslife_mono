@@ -5,6 +5,7 @@ import (
 	"sobeslife-services/internal/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func (h *Handler) getQuestionsByFilters(c *gin.Context) {
@@ -16,7 +17,9 @@ func (h *Handler) getQuestionsByFilters(c *gin.Context) {
 
 	result, err := h.services.GetQuestionsByFilters(filters)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		logrus.Errorf("Fetching questions failed: %s", err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
 	}
 
 	c.JSON(http.StatusOK, result)

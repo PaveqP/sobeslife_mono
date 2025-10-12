@@ -13,7 +13,8 @@ func (h *Handler) getModulesByFilters(c *gin.Context) {
 	result, err := h.services.Shared.GetModulesByFilters(profession)
 	if err != nil {
 		logrus.Errorf("Fetching modules failed: %s", err)
-		c.JSON(http.StatusInternalServerError, err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
 	}
 	c.JSON(http.StatusOK, result)
 }

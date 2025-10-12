@@ -6,3 +6,7 @@ db:
   username: "postgres"
   dbname: "postgres"
   sslmode: "disable"
+
+jwt:
+  accessTTL: "12"
+  refreshTTL: "168"

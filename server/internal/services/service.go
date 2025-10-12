@@ -6,8 +6,12 @@ import (
 )
 
 type Authorization interface {
-	CreateUser(nickname string, email string, phoneNumber string, password string) (int, error)
+	CreateUser(userParams utils.CreateUserQuery) (string, error)
 	GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error)
+	AuthByNumber(phoneNumber string, password string) (*utils.TokensPair, error)
+	AuthByNickname(nickname string, password string) (*utils.TokensPair, error)
+	AuthByEmail(email string, password string) (*utils.TokensPair, error)
+	GetIsAdmin(userId string) (bool, error)
 }
 
 type Questions interface {
@@ -31,9 +35,9 @@ type Service struct {
 	Shared
 }
 
-func NewService(repo *repository.Repository) *Service {
+func NewService(repo *repository.Repository, jwt *utils.JWTService) *Service {
 	return &Service{
-		Authorization: newAuthService(repo),
+		Authorization: newAuthService(repo, jwt),
 		Questions:     newQuestionService(repo),
 		Tests:         newTestsService(repo),
 		Shared:        newSharedService(repo),
