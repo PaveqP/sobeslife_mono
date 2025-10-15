@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  app:
+    build: ./server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: unless-stopped
+    env_file:
+      - .env
+  db:
+    image: postgres:15
+    container_name: sobeslife-db
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+    ports:
+      - "5454:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    command: ["/docker-entrypoint-initdb.d/init.sh"]
+
+volumes:
+  postgres_data:

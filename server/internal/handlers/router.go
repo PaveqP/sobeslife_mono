@@ -57,6 +57,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		{
 			//tests.GET("/")
 			tests.POST("/generate", h.generateTest)
+			// tests.POST("/:id/complete")
+			// tests.GET("/:id/statistics")
 		}
 	}
 
