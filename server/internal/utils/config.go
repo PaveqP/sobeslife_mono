@@ -8,14 +8,22 @@ import (
 )
 
 type Config struct {
-	Port string   `yaml:"port" env-default:"8080"`
-	DB   DBConfig `yaml:"db"`
-	JWT  JWTAppConfig
+	Port  string   `yaml:"port" env-default:"8080"`
+	DB    DBConfig `yaml:"db"`
+	JWT   JWTAppConfig
+	Redis RedisConfig
 }
 
 type JWTAppConfig struct {
 	AccessTTL  string
 	RefreshTTL string
+}
+
+type RedisConfig struct {
+	Addr              string
+	Password          string
+	DB                int
+	ExpirationMinutes int `yaml:"expirationMinutes"`
 }
 
 type DBConfig struct {

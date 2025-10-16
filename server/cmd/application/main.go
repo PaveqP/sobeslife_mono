@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sobeslife-services/internal/cache"
 	"sobeslife-services/internal/handlers"
 	"sobeslife-services/internal/repository"
 	"sobeslife-services/internal/server"
@@ -19,6 +20,14 @@ func main() {
 	}
 	logrus.SetFormatter(new(logrus.JSONFormatter))
 	cfg := utils.MustLoadConfig()
+
+	redisClient := cache.NewRedisClient(cache.RedisConfig{
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	cacheService := cache.NewCacheService(redisClient, time.Duration(cfg.Redis.ExpirationMinutes)*time.Minute)
 
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     cfg.DB.Host,
@@ -52,7 +61,7 @@ func main() {
 	})
 	repository := repository.NewRepository(db)
 	services := services.NewService(repository, jwt)
-	handler := handlers.NewHandler(services, jwt, "started successfully", time.Now())
+	handler := handlers.NewHandler(services, jwt, cacheService, "started successfully", time.Now())
 
 	server := new(server.Server)
 

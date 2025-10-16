@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"sobeslife-services/internal/cache"
 	"sobeslife-services/internal/services"
 	"sobeslife-services/internal/utils"
 	"time"
@@ -11,12 +12,13 @@ import (
 type Handler struct {
 	services        *services.Service
 	jwt             *utils.JWTService
+	cacheService    *cache.CacheService
 	serverStatus    string
 	serverStartTime time.Time
 }
 
-func NewHandler(services *services.Service, jwt *utils.JWTService, serverStatus string, serverStartTime time.Time) *Handler {
-	return &Handler{services, jwt, serverStatus, serverStartTime}
+func NewHandler(services *services.Service, jwt *utils.JWTService, cacheService *cache.CacheService, serverStatus string, serverStartTime time.Time) *Handler {
+	return &Handler{services, jwt, cacheService, serverStatus, serverStartTime}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
@@ -47,7 +49,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			// technology.GET("/:id")
 			// technology.GET("/module/:id")
 		}
-		question := api.Group("/questions")
+		question := api.Group("/questions", h.metricsMiddleware)
 		{
 			question.GET("/", h.getQuestionsByFilters)
 			//question.GET("/:id")

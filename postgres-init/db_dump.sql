@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict gA9VldKUBtDgnPPitdh0nHcIIKfO5eCbaQ8FCJhfC6wNYHDFtpL3OETivodrelw
+\restrict 3uPNMNOdUpp1BVDsvibkf3Nq8PWWbzhkSwLg6WJTtYSjy4f6YcOQ9V3EJ0tJ6qu
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 18.0
@@ -533,21 +533,21 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 --
 
 COPY public.chapter (id, name) FROM stdin;
-1	Основы программирования
-2	Структуры данных и алгоритмы
-3	Базы данных
-4	Веб-разработка
-5	Мобильная разработка
-6	DevOps и инфраструктура
-7	Безопасность
-8	Тестирование
-9	Архитектура и паттерны
-10	Инструменты разработки
-11	Операционные системы
-12	Сети и протоколы
-13	Машинное обучение
-14	Микросервисы
-15	Контейнеризация
+3	Data bases
+1	Programming Basics
+2	Algorythms and data structures
+4	Web development
+5	Mobile Development
+6	DevOps and infrastructure
+7	Cyber Security
+8	Testing
+9	Architecture and patterns
+10	Development tools
+11	Operation systems
+12	Networks and protocols
+13	Machine Learning
+14	Microservices
+15	Containers
 \.
 
 
@@ -1001,6 +1001,7 @@ COPY public.users (id, nickname, email, phone_number, password_hash, is_admin, d
 3	maria_qa	maria@mail.com	+79990000003	user_hash_789	f	1992-08-20	7	junior
 4	alex_ml	alex@mail.com	+79990000004	user_hash_101	f	1988-12-10	9	senior
 5	sasha_front	sasha@mail.com	+79990000005	user_hash_102	f	1998-03-25	1	trainee
+6	Paveq_p	paveq2003@yandex.ru	89052571777	$2a$10$RJuHYBDyu3llbVlmXh0TB.ZWFSbuOIVY8ef1Ny77/1AcZwEzSrZm6	f	\N	\N	\N
 \.
 
 
@@ -1325,5 +1326,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict gA9VldKUBtDgnPPitdh0nHcIIKfO5eCbaQ8FCJhfC6wNYHDFtpL3OETivodrelw
+\unrestrict 3uPNMNOdUpp1BVDsvibkf3Nq8PWWbzhkSwLg6WJTtYSjy4f6YcOQ9V3EJ0tJ6qu
 

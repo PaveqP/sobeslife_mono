@@ -10,3 +10,9 @@ db:
 jwt:
   accessTTL: "12"
   refreshTTL: "168"
+
+redis:
+  addr: "redis:6379"
+  password: ""
+  db: 0
+  expirationMinutes: 1440
