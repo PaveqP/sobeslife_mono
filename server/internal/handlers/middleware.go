@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -46,4 +47,15 @@ func (h *Handler) identifyUser(c *gin.Context) {
 
 	c.Set(userIdKey, userId)
 	c.Set(isAdminKey, isAdmin)
+}
+
+func getUserId(c *gin.Context) (string, error) {
+	userId, ok := c.Get(userIdKey)
+
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, "user id not found")
+		return "", errors.New("user id not found")
+	}
+
+	return userId.(string), nil
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"sobeslife-services/internal/repository"
 	"sobeslife-services/internal/utils"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,4 +23,16 @@ func (qs *QuestionService) GetQuestionsByFilters(filters utils.QuestionFilters) 
 		return nil, err
 	}
 	return result, nil
+}
+
+func (qs *QuestionService) CheckAnswer(question_id string, answer string) (bool, error) {
+	correctAnswer, err := qs.r.Questions.GetCorrectAnswer(question_id)
+	if err != nil {
+		return false, err
+	}
+
+	normalizedCorrectAnswer := strings.TrimSpace(strings.ToLower(correctAnswer))
+	normalizedUsersAnswer := strings.TrimSpace(strings.ToLower(answer))
+
+	return normalizedCorrectAnswer == normalizedUsersAnswer, nil
 }

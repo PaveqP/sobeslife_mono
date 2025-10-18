@@ -1,0 +1,4 @@
+ALTER TABLE test_question
+ADD COLUMN is_correct BOOLEAN,
+ADD COLUMN answer VARCHAR(1000),
+ADD COLUMN points INT;

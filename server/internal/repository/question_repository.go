@@ -62,3 +62,12 @@ func (qr *QuestionRepository) buildWhereClause(filters utils.QuestionFilters) (s
 
 	return "", params
 }
+
+func (qr *QuestionRepository) GetCorrectAnswer(question_id string) (string, error) {
+	query := "SELECT correct_answer FROM question WHERE id = $1"
+	var correctAnswer string
+	if err := qr.db.Get(&correctAnswer, query, question_id); err != nil {
+		return "", err
+	}
+	return correctAnswer, nil
+}

@@ -52,14 +52,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		question := api.Group("/questions", h.metricsMiddleware)
 		{
 			question.GET("/", h.getQuestionsByFilters)
-			//question.GET("/:id")
+			question.POST("/:id/check", h.checkAnswer)
 		}
 
 		tests := api.Group("/tests")
 		{
 			//tests.GET("/")
 			tests.POST("/generate", h.generateTest)
-			// tests.POST("/:id/complete")
+			tests.POST("/:id/start", h.startTest)
+			tests.POST("/:id/complete", h.completeTest)
+			tests.POST("/:id/answer/check", h.checkTestAnswer)
 			// tests.GET("/:id/statistics")
 		}
 	}

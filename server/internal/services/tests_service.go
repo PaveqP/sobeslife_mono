@@ -10,6 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const StandardSQLTimeFormat string = "2006-01-02 15:04:05"
+
 type TestsService struct {
 	r *repository.Repository
 }
@@ -76,4 +78,34 @@ func (ts *TestsService) GetRandomQuestions(questions []utils.QuestionResponse) (
 	}
 
 	return result, returningQuestions
+}
+
+func (ts *TestsService) SetUsersAnswer(test_id string, question_id string, answer string, isCorrect bool) error {
+	err := ts.r.Tests.SetUsersAnswer(test_id, question_id, answer, isCorrect)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ts *TestsService) Start(user_id string, test_id string) error {
+	currentTime := time.Now().Format(StandardSQLTimeFormat)
+	var testStatus utils.TestStatus = "in_progress"
+	err := ts.r.Tests.Start(user_id, test_id, currentTime, testStatus)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ts *TestsService) Complete(user_id string, test_id string) (*utils.TestStatsResponse, error) {
+	currentTime := time.Now().Format(StandardSQLTimeFormat)
+	var testStatus utils.TestStatus = "completed"
+	stats, err := ts.r.Tests.Complete(user_id, test_id, currentTime, testStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	return stats, nil
 }

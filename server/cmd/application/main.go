@@ -18,7 +18,11 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		panic("Loading dotenv failed")
 	}
-	logrus.SetFormatter(new(logrus.JSONFormatter))
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+		ForceColors:   true,
+		PadLevelText:  true,
+	})
 	cfg := utils.MustLoadConfig()
 
 	redisClient := cache.NewRedisClient(cache.RedisConfig{

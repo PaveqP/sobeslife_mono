@@ -16,10 +16,14 @@ type Authorization interface {
 
 type Questions interface {
 	GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error)
+	CheckAnswer(question_id string, answer string) (bool, error)
 }
 
 type Tests interface {
 	Generate(testParameters utils.CreateTestRequest) (utils.TestResponse, error)
+	Start(user_id string, test_id string) error
+	SetUsersAnswer(test_id string, question_id string, answer string, isCorrect bool) error
+	Complete(user_id string, test_id string) (*utils.TestStatsResponse, error)
 }
 
 type Shared interface {

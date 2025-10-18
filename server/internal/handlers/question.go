@@ -40,3 +40,30 @@ func (h *Handler) getQuestionsByFilters(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+func (h *Handler) checkAnswer(c *gin.Context) {
+	question_id := c.Param("id")
+	var answer utils.UsersAnswer
+	if err := c.BindJSON(&answer); err != nil {
+		logrus.Errorf("Can`t read request body: %s", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+	if answer.Answer == "" {
+		logrus.Error("User`s answer is empty")
+		c.AbortWithStatusJSON(http.StatusBadRequest, "User`s answer is empty")
+		return
+	}
+
+	result, err := h.services.Questions.CheckAnswer(question_id, answer.Answer)
+	if err != nil {
+		logrus.Error("Failed check answer")
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"your_answer": answer.Answer,
+		"is_correct":  result,
+	})
+}
