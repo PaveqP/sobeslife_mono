@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -67,11 +68,21 @@ func main() {
 	services := services.NewService(repository, jwt)
 	handler := handlers.NewHandler(services, jwt, cacheService, "started successfully", time.Now())
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		Debug:            false,
+	})
+
+	corsHandler := c.Handler(handler.InitRoutes())
+
 	server := new(server.Server)
 
 	logrus.Print("Server was started successfully!!")
 
-	if err := server.Run(cfg.Port, handler.InitRoutes()); err != nil {
+	if err := server.Run(cfg.Port, corsHandler); err != nil {
 		logrus.Errorf("FATAL: server not started, %s", err)
 	}
 }
