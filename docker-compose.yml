@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
   db:
-    image: postgres:15
+    image: postgres:16
     container_name: sobeslife-db
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -24,7 +24,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
     restart: unless-stopped
-    command: ["/docker-entrypoint-initdb.d/init.sh"]
 
   redis:
     image: redis:7-alpine

@@ -69,10 +69,10 @@ func main() {
 	handler := handlers.NewHandler(services, jwt, cacheService, "started successfully", time.Now())
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		Debug:            false,
 	})
 
