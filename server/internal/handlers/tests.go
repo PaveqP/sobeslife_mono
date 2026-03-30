@@ -9,6 +9,47 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (h *Handler) getTests(c *gin.Context) {
+	user_id, err := getUserId(c)
+	if err != nil {
+		return
+	}
+
+	filters := utils.TestListFilters{
+		Title:          c.Query("title"),
+		Profession:     c.Query("profession"),
+		Chapter:        c.Query("chapter"),
+		Technology:     c.Query("technology"),
+		ExpertiseLevel: c.Query("expertise_level"),
+	}
+
+	result, err := h.services.Tests.List(user_id, filters)
+	if err != nil {
+		logrus.Errorf("Failed fetch tests: %s", err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) getTestByID(c *gin.Context) {
+	user_id, err := getUserId(c)
+	if err != nil {
+		return
+	}
+
+	test_id := c.Param("id")
+	result, err := h.services.Tests.GetByID(user_id, test_id)
+	if err != nil {
+		logrus.Errorf("Failed fetch test by id: %s", err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 func (h *Handler) generateTest(c *gin.Context) {
 	var testParameters utils.CreateTestRequest
 	if err := c.BindJSON(&testParameters); err != nil {

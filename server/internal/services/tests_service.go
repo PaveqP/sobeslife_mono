@@ -54,12 +54,27 @@ func (ts *TestsService) Generate(testParameters utils.CreateTestRequest) (utils.
 	}, err
 }
 
+func (ts *TestsService) List(user_id string, filters utils.TestListFilters) ([]utils.TestListItem, error) {
+	return ts.r.Tests.List(user_id, filters)
+}
+
+func (ts *TestsService) GetByID(user_id string, test_id string) (*utils.TestDetailsResponse, error) {
+	return ts.r.Tests.GetByID(user_id, test_id)
+}
+
 func (ts *TestsService) GetRandomQuestions(questions []utils.QuestionResponse) ([]string, []utils.QuestionResponse) {
 	if len(questions) == 0 {
 		return []string{}, []utils.QuestionResponse{}
 	}
 
-	countQuestions := math.Ceil(float64(len(questions)) * 0.2)
+	countQuestions := int(math.Ceil(float64(len(questions)) * 0.2))
+	if countQuestions < 1 {
+		countQuestions = 1
+	}
+	if countQuestions > len(questions) {
+		countQuestions = len(questions)
+	}
+
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	shuffled := make([]utils.QuestionResponse, len(questions))
@@ -69,10 +84,10 @@ func (ts *TestsService) GetRandomQuestions(questions []utils.QuestionResponse) (
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
-	result := make([]string, 0, int(countQuestions))
-	returningQuestions := make([]utils.QuestionResponse, 0, int(countQuestions))
+	result := make([]string, 0, countQuestions)
+	returningQuestions := make([]utils.QuestionResponse, 0, countQuestions)
 
-	for i := 0; i <= int(countQuestions); i++ {
+	for i := 0; i < countQuestions; i++ {
 		result = append(result, shuffled[i].ID)
 		returningQuestions = append(returningQuestions, shuffled[i])
 	}

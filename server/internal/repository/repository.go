@@ -20,6 +20,8 @@ type Questions interface {
 
 type Tests interface {
 	Generate(testParameters utils.CreateTestRequest, questions []string) (utils.Test, error)
+	List(user_id string, filters utils.TestListFilters) ([]utils.TestListItem, error)
+	GetByID(user_id string, test_id string) (*utils.TestDetailsResponse, error)
 	SetUsersAnswer(test_id string, question_id string, answer string, isCorrect bool) error
 	Start(user_id string, test_id string, currentTime string, testStatus utils.TestStatus) error
 	Complete(user_id string, test_id string, currentTime string, testStatus utils.TestStatus) (*utils.TestStatsResponse, error)

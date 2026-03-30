@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"sobeslife-services/internal/utils"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -72,9 +73,114 @@ func (tr *TestsRepository) Generate(testParameters utils.CreateTestRequest, ques
 	return test, nil
 }
 
+func (tr *TestsRepository) List(user_id string, filters utils.TestListFilters) ([]utils.TestListItem, error) {
+	baseQuery := `SELECT 
+		t.id,
+		t.title,
+		p.name AS profession,
+		c.name AS chapter,
+		te.name AS technology,
+		t.expertise_level,
+		COUNT(tq.id)::int AS question_count,
+		ut.test_status AS status,
+		ut.score
+	FROM test t
+	JOIN profession p ON p.id = t.profession_id
+	LEFT JOIN chapter c ON c.id = t.chapter_id
+	LEFT JOIN technology te ON te.id = t.technology_id
+	LEFT JOIN test_question tq ON tq.test_id = t.id
+	LEFT JOIN LATERAL (
+		SELECT test_status, score
+		FROM user_test
+		WHERE user_id = $1 AND test_id = t.id
+		ORDER BY COALESCE(completed_at, started_at) DESC NULLS LAST, id DESC
+		LIMIT 1
+	) ut ON true`
+
+	whereClause, params := tr.buildTestsWhereClause(filters, 2)
+	query := baseQuery + whereClause + `
+	GROUP BY t.id, p.name, c.name, te.name, ut.test_status, ut.score
+	ORDER BY t.id ASC`
+
+	args := append([]interface{}{user_id}, params...)
+	var result []utils.TestListItem
+	if err := tr.db.Select(&result, query, args...); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (tr *TestsRepository) GetByID(user_id string, test_id string) (*utils.TestDetailsResponse, error) {
+	getTestQuery := `SELECT 
+		t.id,
+		t.title,
+		p.name AS profession,
+		c.name AS chapter,
+		te.name AS technology,
+		t.expertise_level,
+		ut.test_status AS status
+	FROM test t
+	JOIN profession p ON p.id = t.profession_id
+	LEFT JOIN chapter c ON c.id = t.chapter_id
+	LEFT JOIN technology te ON te.id = t.technology_id
+	LEFT JOIN LATERAL (
+		SELECT test_status
+		FROM user_test
+		WHERE user_id = $2 AND test_id = t.id
+		ORDER BY COALESCE(completed_at, started_at) DESC NULLS LAST, id DESC
+		LIMIT 1
+	) ut ON true
+	WHERE t.id = $1`
+
+	getQuestionsQuery := `SELECT 
+		q.id,
+		q.text,
+		tq.answer AS user_answer,
+		tq.is_correct
+	FROM test_question tq
+	JOIN question q ON q.id = tq.question_id
+	WHERE tq.test_id = $1
+	ORDER BY tq.id`
+
+	var testDetails utils.TestDetailsResponse
+	if err := tr.db.Get(&testDetails, getTestQuery, test_id, user_id); err != nil {
+		return nil, err
+	}
+
+	var questions []utils.TestQuestionDetails
+	if err := tr.db.Select(&questions, getQuestionsQuery, test_id); err != nil {
+		return nil, err
+	}
+
+	testDetails.Questions = questions
+
+	return &testDetails, nil
+}
+
 func (tr *TestsRepository) Start(user_id string, test_id string, currentTime string, testStatus utils.TestStatus) error {
-	query := "INSERT INTO user_test (user_id, test_id, test_status, started_at) VALUES ($1, $2, $3, $4)"
-	_, err := tr.db.Exec(query, user_id, test_id, testStatus, currentTime)
+	updateQuery := `
+		UPDATE user_test
+		SET test_status = $1,
+			started_at = COALESCE(started_at, $2),
+			completed_at = NULL
+		WHERE user_id = $3 AND test_id = $4
+	`
+	result, err := tr.db.Exec(updateQuery, testStatus, currentTime, user_id, test_id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected > 0 {
+		return nil
+	}
+
+	insertQuery := "INSERT INTO user_test (user_id, test_id, test_status, started_at) VALUES ($1, $2, $3, $4)"
+	_, err = tr.db.Exec(insertQuery, user_id, test_id, testStatus, currentTime)
 	if err != nil {
 		return err
 	}
@@ -170,4 +276,46 @@ func (tr *TestsRepository) Complete(user_id string, test_id string, currentTime 
 		TestStats: testStats,
 		Questions: testQuestionStats,
 	}, nil
+}
+
+func (tr *TestsRepository) buildTestsWhereClause(filters utils.TestListFilters, startParamCount int) (string, []interface{}) {
+	conditions := []string{}
+	params := []interface{}{}
+	paramCount := startParamCount - 1
+
+	if filters.Title != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("t.title ILIKE $%d", paramCount))
+		params = append(params, "%"+filters.Title+"%")
+	}
+
+	if filters.Profession != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("p.name = $%d", paramCount))
+		params = append(params, filters.Profession)
+	}
+
+	if filters.Chapter != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("c.name = $%d", paramCount))
+		params = append(params, filters.Chapter)
+	}
+
+	if filters.Technology != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("te.name = $%d", paramCount))
+		params = append(params, filters.Technology)
+	}
+
+	if filters.ExpertiseLevel != "" {
+		paramCount++
+		conditions = append(conditions, fmt.Sprintf("t.expertise_level = $%d", paramCount))
+		params = append(params, filters.ExpertiseLevel)
+	}
+
+	if len(conditions) == 0 {
+		return "", params
+	}
+
+	return " WHERE " + strings.Join(conditions, " AND "), params
 }
