@@ -1,0 +1,40 @@
+# Deploy dev stand: push to `dev` → SSH to server, pull, rebuild stack.
+#
+# Required GitHub repository secrets:
+#   DEV_SSH_HOST       — server hostname or IP
+#   DEV_SSH_USER       — e.g. deploy
+#   DEV_SSH_PRIVATE_KEY — full PEM private key (include BEGIN/END lines)
+#   DEV_DEPLOY_PATH    — absolute path to repo on server, e.g. /opt/sobeslife
+
+name: Deploy dev stand
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.DEV_DEPLOY_PATH }}"
+            git config --global --add safe.directory "$(pwd)" || true
+            git fetch origin dev
+            git checkout dev
+            git pull --ff-only origin dev
+            docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
+            docker compose -f docker-compose.deploy.yml --env-file .env ps

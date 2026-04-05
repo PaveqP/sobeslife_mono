@@ -1,0 +1,20 @@
+# Development image: Vite dev server with HMR (use with compose volume mount for live edits).
+FROM node:22-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+
+RUN npm ci
+
+COPY . .
+
+COPY docker-entrypoint.dev.sh /usr/local/bin/docker-entrypoint.dev.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.dev.sh
+
+EXPOSE 5173
+
+ENV NODE_ENV=development
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.dev.sh"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

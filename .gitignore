@@ -4,3 +4,6 @@ server/.env
 .env
 server/cmd/migrator/
 server/tmp
+node_modules/
+mobile/dist/
+web/dist/

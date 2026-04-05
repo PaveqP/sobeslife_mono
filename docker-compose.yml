@@ -1,6 +1,19 @@
-version: "3.8"
-
 services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      # Browser calls this URL; use the host/port where the Go API is reachable (see README).
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - app
+
   app:
     build: ./server
     ports:
@@ -38,3 +51,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  web_node_modules:

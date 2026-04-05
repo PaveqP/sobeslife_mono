@@ -12,5 +12,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Needed when the dev server runs inside Docker so the port is reachable from the host.
+    host: true,
   },
 })
