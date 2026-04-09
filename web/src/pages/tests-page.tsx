@@ -77,7 +77,7 @@ export const TestsPage = () => {
         <Card className="space-y-5 bg-gradient-to-br from-accent-soft via-surface to-surface">
           <div className="inline-flex w-fit items-center gap-2 rounded-full bg-surface px-3 py-1 text-xs font-semibold text-accent">
             <Sparkles className="size-3.5" />
-            Главная страница тестов
+            Главная страница тестов(тест деплоя)
           </div>
           <div className="space-y-3">
             <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
