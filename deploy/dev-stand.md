@@ -1,36 +1,73 @@
-# Дев-стенд: развёртывание, nginx, CI из ветки `dev`
+# Дев-стенд на VPS: полная пошаговая инструкция
 
-Ниже — полный цикл: сервер, Docker, доступ по HTTP, деплой по push в `dev`, затем заметки про прод.
+Ниже — развёртывание проекта **sobeslife_mono** на чистом Linux-сервере: от первого SSH-подключения до автодеплоя по push в ветку `dev`.
+
+**Что получится в итоге**
+
+- Один HTTP-порт (по умолчанию **80**): контейнер `web` (nginx) отдаёт SPA и проксирует `/api`, `/auth`, `/health` на бэкенд `app`.
+- Браузер ходит на **один origin** (например `http://IP_СЕРВЕРА`) — отдельный `VITE_API_URL` на другой порт не нужен.
+- Файлы в репозитории: `docker-compose.deploy.yml`, `web/Dockerfile` + `web/nginx.conf`, `.github/workflows/deploy-dev.yml`.
+
+**Подставьте свои значения**
+
+| Плейсхолдер | Смысл |
+|-------------|--------|
+| `YOUR_USER` | ваш пользователь Linux на VPS (например `ubuntu` или `deploy`) |
+| `YOUR_SERVER_IP` | IP или домен сервера |
+| `YOUR_GITHUB_USER` | логин GitHub |
+| `YOUR_REPO` | имя репозитория (для этого монорепо: `sobeslife_mono`) |
 
 ---
 
-## 1. Что уже есть в репозитории
+## Часть A. Подготовка сервера (один раз)
 
-| Файл | Назначение |
-|------|------------|
-| `docker-compose.yml` | Локальная разработка: Vite на `:5173`, API на `:8080` |
-| `docker-compose.deploy.yml` | Стенд: **один вход** на порту `HTTP_PORT` (по умолчанию **80**): nginx в образе `web` отдаёт SPA и проксирует `/api`, `/auth`, `/health` на сервис `app` |
-| `web/Dockerfile` | Production-сборка фронта + `nginx` с конфигом `web/nginx.conf` |
-| `web/Dockerfile.dev` | Только для локального dev в compose |
-| `.github/workflows/deploy-dev.yml` | GitHub Actions: push в `dev` → SSH на сервер → `git pull` → `docker compose ... up -d --build` |
+### A1. Подключение по SSH
 
-Браузер ходит на **один origin** (например `http://SERVER_IP`), без `VITE_API_URL` на отдельный порт API — так проще CORS и прод-конфиг.
-
----
-
-## 2. Сервер: ОС и пакеты
-
-**ОС:** Ubuntu Server **22.04 или 24.04 LTS** (или Debian 12). Ставь минимальный образ, без GUI.
-
-Подключись по SSH и обнови систему:
+С вашего компьютера:
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y ca-certificates curl git
+ssh YOUR_USER@YOUR_SERVER_IP
 ```
 
-Установи **Docker Engine** и плагин **Compose** по официальной инструкции:  
-https://docs.docker.com/engine/install/ubuntu/
+Если ключа ещё нет, создайте на **локальной** машине:
+
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com" -f ~/.ssh/id_ed25519
+```
+
+Скопируйте публичный ключ на сервер (если провайдер не сделал это в панели):
+
+```bash
+ssh-copy-id -i ~/.ssh/id_ed25519.pub YOUR_USER@YOUR_SERVER_IP
+```
+
+### A2. Обновление системы и базовые пакеты
+
+На сервере (подходит **Ubuntu 22.04 / 24.04 LTS** или **Debian 12**):
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y ca-certificates curl git gnupg
+```
+
+### A3. Установка Docker Engine и Compose
+
+Официальная инструкция: [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/). Кратко — на Ubuntu:
+
+```bash
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${VERSION_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
 
 Проверка:
 
@@ -39,54 +76,89 @@ docker --version
 docker compose version
 ```
 
-Добавь пользователя деплоя в группу `docker` (чтобы не использовать `sudo` для compose):
+Добавьте пользователя в группу `docker`, чтобы не писать `sudo` перед `docker`:
 
 ```bash
-sudo usermod -aG docker ВАШ_ПОЛЬЗОВАТЕЛЬ
+sudo usermod -aG docker "$USER"
 ```
 
-Перелогинься (или `newgrp docker`).
+Выйдите из сессии и зайдите снова **или** выполните:
 
----
+```bash
+newgrp docker
+```
 
-## 3. Firewall
+Проверка без `sudo`:
 
-Разреши SSH и HTTP (HTTPS — когда настроишь сертификат):
+```bash
+docker run --rm hello-world
+```
+
+### A4. Firewall (UFW)
 
 ```bash
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-sudo ufw enable
-sudo ufw status
+sudo ufw --force enable
+sudo ufw status verbose
 ```
 
----
+Порт **443** пригодится позже для HTTPS; пока достаточно **22** и **80**.
 
-## 4. Первичная настройка репозитория на сервере
+### A5. Каталог проекта и клонирование репозитория
 
-Создай каталог и клонируй **ветку `dev`**:
+Создайте каталог и выставьте владельца:
 
 ```bash
 sudo mkdir -p /opt/sobeslife
 sudo chown "$USER:$USER" /opt/sobeslife
 cd /opt/sobeslife
-git clone -b dev --single-branch https://github.com/ВАШ_АККАУНТ/sobeslife_mono.git .
 ```
 
-Для **приватного** репозитория удобнее SSH:
+**Публичный** репозиторий (ветка `dev`):
 
 ```bash
-git clone -b dev --single-branch git@github.com:ВАШ_АККАУНТ/sobeslife_mono.git .
+git clone -b dev --single-branch https://github.com/YOUR_GITHUB_USER/YOUR_REPO.git .
 ```
 
-На GitHub: **Settings → SSH and GPG keys** у пользователя `git` на сервере — добавь публичный ключ из `~/.ssh/id_ed25519.pub` (или создай ключ специально для сервера).
+**Приватный** репозиторий удобнее через SSH. На сервере создайте ключ **только для git** (если ещё нет):
 
----
+```bash
+ssh-keygen -t ed25519 -C "sobeslife-server-git" -f ~/.ssh/id_ed25519_github -N ""
+cat ~/.ssh/id_ed25519_github.pub
+```
 
-## 5. Переменные окружения
+Скопируйте вывод и добавьте в GitHub: **Settings → SSH and GPG keys → New SSH key**.
 
-Скопируй шаблон и отредактируй пароль БД:
+Настройте использование этого ключа для `github.com`:
+
+```bash
+printf '%s\n' \
+  'Host github.com' \
+  '  HostName github.com' \
+  '  User git' \
+  '  IdentityFile ~/.ssh/id_ed25519_github' \
+  '  IdentitiesOnly yes' >> ~/.ssh/config
+chmod 600 ~/.ssh/config
+```
+
+Проверка:
+
+```bash
+ssh -T git@github.com
+```
+
+Клонирование:
+
+```bash
+cd /opt/sobeslife
+git clone -b dev --single-branch git@github.com:YOUR_GITHUB_USER/YOUR_REPO.git .
+```
+
+### A6. Файл окружения `.env`
+
+Шаблон лежит в `deploy/env.example`. Скопируйте в **корень** репозитория на сервере:
 
 ```bash
 cd /opt/sobeslife
@@ -94,13 +166,26 @@ cp deploy/env.example .env
 nano .env
 ```
 
-Минимум: **`DB_PASSWORD`** — тот же пароль должен подставляться в Postgres (compose подставляет `POSTGRES_PASSWORD` из этого файла).
+**Обязательно** задайте сильный **`DB_PASSWORD`** — тот же пароль подставится в Postgres через `docker-compose.deploy.yml`.
 
-Файл `.env` **не коммить** — он уже в `.gitignore`.
+Минимальное содержимое (пример):
+
+```env
+DB_PASSWORD=сгенерируйте-длинный-случайный-пароль
+```
+
+Опционально:
+
+- `HTTP_PORT=80` — порт на хосте (по умолчанию 80). Если на сервере порт 80 занят, например `HTTP_PORT=8080`.
+- `VITE_API_URL` — для деплоя **оставьте пустым** (same origin через nginx).
+
+Файл `.env` в `.gitignore` и **не коммитьте**.
 
 ---
 
-## 6. Первый запуск стека
+## Часть B. Первый запуск стека
+
+### B1. Сборка и запуск
 
 ```bash
 cd /opt/sobeslife
@@ -108,35 +193,118 @@ docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
 docker compose -f docker-compose.deploy.yml --env-file .env ps
 ```
 
-Проверка:
+### B2. Проверки
 
-- В браузере: `http://IP_СЕРВЕРА` — фронт.
-- API: `http://IP_СЕРВЕРА/health` — ответ бэкенда.
-
-Логи при необходимости:
+С **вашего компьютера** (подставьте IP):
 
 ```bash
+curl -sS -o /dev/null -w "%{http_code}\n" http://YOUR_SERVER_IP/
+curl -sS http://YOUR_SERVER_IP/health
+```
+
+В браузере откройте `http://YOUR_SERVER_IP` — должен открыться фронт.
+
+### B3. Логи
+
+```bash
+cd /opt/sobeslife
 docker compose -f docker-compose.deploy.yml --env-file .env logs -f web app
+```
+
+Остановка по `Ctrl+C`. Просмотр последних строк без follow:
+
+```bash
+docker compose -f docker-compose.deploy.yml --env-file .env logs --tail=100 web app
+```
+
+### B4. Диагностика изнутри Docker (если 502 по API)
+
+С хоста порт API **8080** может быть не проброшен наружу — это нормально. Проверка с контейнера `web`:
+
+```bash
+cd /opt/sobeslife
+docker compose -f docker-compose.deploy.yml --env-file .env exec web wget -qO- http://app:8080/health
 ```
 
 ---
 
-## 7. Где тут nginx
+## Часть C. Что где лежит в репозитории
 
-Отдельный системный nginx **не обязателен**: в образе `web` уже **nginx**, он:
+| Файл | Назначение |
+|------|------------|
+| `docker-compose.yml` | Локальная разработка (Vite `:5173`, API `:8080`) |
+| `docker-compose.deploy.yml` | Стенд: один вход `HTTP_PORT` → nginx в сервисе `web`, бэкенд `app`, Postgres, Redis |
+| `web/Dockerfile` | Production-сборка фронта + nginx |
+| `web/nginx.conf` | Статика + прокси на `app:8080` |
+| `.github/workflows/deploy-dev.yml` | CI: push в `dev` → SSH → `git pull` → `docker compose ... up -d --build` |
 
-- отдаёт статику Vite (`try_files` + SPA fallback на `index.html`);
-- проксирует `/api/`, `/auth/`, `/health` на контейнер `app:8080`.
+---
 
-Конфиг в репозитории: `web/nginx.conf`.
+## Часть D. GitHub Actions: деплой по push в `dev`
 
-### Если на одном VPS несколько сайтов
+### D1. Секреты репозитория
 
-Подними **системный** nginx (или Caddy) на 80/443 и проксируй на Docker **только порт**, например:
+GitHub → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Значение |
+|--------|----------|
+| `DEV_SSH_HOST` | `YOUR_SERVER_IP` или домен |
+| `DEV_SSH_USER` | пользователь с правом `docker` и доступом к `/opt/sobeslife` |
+| `DEV_SSH_PRIVATE_KEY` | **полный** приватный ключ (строки `BEGIN` … `END` включительно) |
+| `DEV_DEPLOY_PATH` | `/opt/sobeslife` |
+
+Рекомендуется отдельная пара ключей **только для CI**: на сервере в `~/.ssh/authorized_keys` добавьте **публичную** часть ключа, **приватную** положите в секрет `DEV_SSH_PRIVATE_KEY`.
+
+Пример генерации пары **на вашей машине** для CI:
+
+```bash
+ssh-keygen -t ed25519 -C "github-actions-sobeslife" -f ./gha_deploy_ed25519 -N ""
+cat gha_deploy_ed25519.pub
+```
+
+Содержимое `gha_deploy_ed25519` (приватный файл) — в секрет GitHub. Публичную строку добавьте на сервер:
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+echo 'ВСТАВЬТЕ_СТРОКУ_ИЗ_gha_deploy_ed25519.pub' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
+### D2. Поведение workflow
+
+Триггеры: **push** в ветку `dev` и ручной **Run workflow** (`workflow_dispatch`).
+
+На сервере выполняется:
+
+1. `cd $DEV_DEPLOY_PATH`
+2. `git config --global --add safe.directory` (на случай предупреждений о владельце)
+3. `git fetch`, `checkout dev`, `git pull --ff-only origin dev`
+4. `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build`
+
+Файл `.env` на сервере должен **уже существовать** до первого деплоя из Actions — он не из репозитория и при `git pull` не затирается.
+
+### D3. Ручной запуск
+
+**Actions** → workflow **Deploy dev stand** → **Run workflow**.
+
+---
+
+## Часть E. Опционально: несколько сайтов на одном VPS
+
+Если на хосте уже занят порт 80, в `.env` укажите, например:
+
+```env
+HTTP_PORT=8080
+```
+
+И поднимите **системный** nginx (или Caddy) на 80/443 с `proxy_pass` на `http://127.0.0.1:8080` с заголовками `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto` (как в разделе ниже — пример для nginx).
+
+Пример фрагмента для **хостового** nginx:
 
 ```nginx
 location / {
-    proxy_pass http://127.0.0.1:80;  # если контейнер web проброшен на 80 хоста
+    proxy_pass http://127.0.0.1:8080;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -144,80 +312,39 @@ location / {
 }
 ```
 
-Либо смени в `.env` проброс: `HTTP_PORT=8080`, а на хосте nginx слушает 80 → `proxy_pass http://127.0.0.1:8080`.
+---
+
+## Часть F. HTTPS (Let’s Encrypt), кратко
+
+Типичный путь: **Certbot** + системный nginx на 80/443, бэкенд приложения на другом порту (см. часть E).
+
+Если TLS нужен **без** отдельного nginx на хосте, часто ставят **Traefik** или **Caddy** перед контейнерами — это отдельная схема. Для учебного дев-стенда часто достаточно HTTP и firewall.
 
 ---
 
-## 8. HTTPS (Let’s Encrypt), кратко
-
-1. Установи Certbot и плагин nginx (если используешь системный nginx).
-2. Получи сертификат на домен.
-3. Настрой редирект HTTP → HTTPS.
-
-Если остаёшься на одном контейнере `web` без хостового nginx, типичный вариант — вынести **Traefik** или **Caddy** перед контейнерами или добавить второй nginx только для TLS — это отдельная схема; для дипломного дев-стенда часто достаточно HTTP + firewall.
-
----
-
-## 9. GitHub Actions: деплой по push в `dev`
-
-### 9.1 Секреты репозитория
-
-GitHub → **Settings → Secrets and variables → Actions → New repository secret**:
-
-| Secret | Пример |
-|--------|--------|
-| `DEV_SSH_HOST` | `203.0.113.10` или `dev.sobeslife.example.com` |
-| `DEV_SSH_USER` | пользователь с правом `docker` и доступом к каталогу репозитория |
-| `DEV_SSH_PRIVATE_KEY` | содержимое **приватного** SSH-ключа (включая `BEGIN` / `END`) |
-| `DEV_DEPLOY_PATH` | `/opt/sobeslife` |
-
-Ключ лучше создать **только для CI** (на сервере в `authorized_keys` добавь публичную часть пары из GitHub).
-
-### 9.2 Поведение workflow
-
-Файл: `.github/workflows/deploy-dev.yml`.
-
-Триггер: **push в ветку `dev`**.
-
-На сервере выполняется: переход в `DEV_DEPLOY_PATH`, `git pull` ветки `dev`, затем:
-
-`docker compose -f docker-compose.deploy.yml --env-file .env up -d --build`
-
-Убедись, что на сервере после первого `git clone` файл `.env` **существует** и не затирается при pull (он в `.gitignore`).
-
-### 9.3 Ручной запуск
-
-Вкладка **Actions** → workflow **Deploy dev stand** → **Run workflow** (если включён `workflow_dispatch`).
-
----
-
-## 10. Прод-стенд (позже)
-
-Идея та же:
-
-- отдельный VPS или тот же с другим `HTTP_PORT` / доменом;
-- отдельные секреты GitHub (`PROD_SSH_*`, `PROD_DEPLOY_PATH`);
-- второй workflow на ветку `main` или тег;
-- строже: бэкапы Postgres, HTTPS, ограничение доступа к Postgres/Redis снаружи (как в `docker-compose.deploy.yml` — порты БД наружу не пробрасываются).
-
----
-
-## 11. Типичные проблемы
+## Часть G. Типичные проблемы
 
 | Симптом | Что проверить |
 |---------|----------------|
-| 502 / пустой ответ от `/api` | `docker compose ... logs app`; контейнер `app` должен быть `Up`; `curl http://127.0.0.1/health` с хоста не сработает, если порт 8080 не проброшен — проверяй из сети Docker: `docker compose ... exec web wget -qO- http://app:8080/health` |
-| После `git pull` ошибка `dubious ownership` | `git config --global --add safe.directory /opt/sobeslife` |
-| Actions не может зайти по SSH | ключ, `authorized_keys`, `DEV_SSH_HOST`, пользователь |
-| Фронт стучится не туда | для deploy-сборки `VITE_API_URL` должен быть пустым (same origin); не задавай в `.env` полный URL API, если nginx на том же хосте |
+| 502 / пустой ответ от `/api` | `docker compose ... logs app`; контейнер `app` — `Up`; проверка `exec web wget http://app:8080/health` (см. B4) |
+| После `git pull` в CI: `dubious ownership` | На сервере один раз: `git config --global --add safe.directory /opt/sobeslife` (workflow уже добавляет `safe.directory` для текущего пути) |
+| Actions не подключается по SSH | Секреты, `authorized_keys`, пользователь, что ключ не с переносами обрезан |
+| Фронт стучит не туда | Для deploy не задавайте полный URL API в `.env`; `VITE_API_URL` пустой = same origin |
+| Порт 80 занят | `HTTP_PORT=8080` в `.env` + прокси с хоста или освободить 80 |
 
 ---
 
-## 12. Чеклист перед первым деплоем
+## Часть H. Чеклист перед первым продакшен-подобным использованием
 
-- [ ] Docker и Compose на сервере
-- [ ] Клон репозитория, ветка `dev`
+- [ ] Docker и `docker compose` работают без `sudo`
+- [ ] Репозиторий клонирован, ветка `dev`
 - [ ] `.env` с сильным `DB_PASSWORD`
-- [ ] `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build` проходит
-- [ ] Сайт открывается по IP
+- [ ] `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build` завершается без ошибок
+- [ ] Сайт и `/health` открываются по IP
 - [ ] Секреты GitHub заданы, push в `dev` обновляет стенд
+
+---
+
+## Часть I. Прод (позже)
+
+Идея та же: отдельный VPS или тот же сервер с другим `HTTP_PORT` / доменом; отдельные секреты (`PROD_SSH_*`, `PROD_DEPLOY_PATH`); отдельный workflow на `main` или теги; бэкапы Postgres, HTTPS, не открывать Postgres/Redis наружу (в `docker-compose.deploy.yml` порты БД на хост не пробрасываются).

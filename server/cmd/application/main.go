@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"os"
 	"sobeslife-services/internal/cache"
 	"sobeslife-services/internal/handlers"
 	"sobeslife-services/internal/repository"
@@ -16,8 +18,9 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		panic("Loading dotenv failed")
+	// Local dev: .env in cwd. Docker: variables come from compose env_file — file may be absent in /app.
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
+		panic("Loading dotenv failed: " + err.Error())
 	}
 	logrus.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
