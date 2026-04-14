@@ -45,6 +45,31 @@ CREATE TYPE public.test_status AS ENUM (
 
 ALTER TYPE public.test_status OWNER TO postgres;
 
+--
+-- Name: interview_message_role; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.interview_message_role AS ENUM (
+    'assistant',
+    'user'
+);
+
+
+ALTER TYPE public.interview_message_role OWNER TO postgres;
+
+--
+-- Name: interview_status; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.interview_status AS ENUM (
+    'in_progress',
+    'completed',
+    'summary_failed'
+);
+
+
+ALTER TYPE public.interview_status OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -185,6 +210,99 @@ ALTER SEQUENCE public.profession_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.profession_id_seq OWNED BY public.profession.id;
+
+
+--
+-- Name: interview_message; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.interview_message (
+    id integer NOT NULL,
+    interview_id integer NOT NULL,
+    sequence_no integer NOT NULL,
+    role public.interview_message_role NOT NULL,
+    content text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT interview_message_sequence_no_check CHECK ((sequence_no > 0))
+);
+
+
+ALTER TABLE public.interview_message OWNER TO postgres;
+
+--
+-- Name: interview_message_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.interview_message_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.interview_message_id_seq OWNER TO postgres;
+
+--
+-- Name: interview_message_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.interview_message_id_seq OWNED BY public.interview_message.id;
+
+
+--
+-- Name: interview_session; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.interview_session (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    profession_id integer NOT NULL,
+    interview_level public.expertise_level NOT NULL,
+    status public.interview_status DEFAULT 'in_progress'::public.interview_status NOT NULL,
+    duration_minutes integer NOT NULL,
+    profile_snapshot jsonb NOT NULL,
+    prompt_version character varying(100),
+    llm_provider character varying(100),
+    llm_model character varying(200),
+    verdict_passed boolean,
+    summary text,
+    strengths jsonb,
+    weaknesses jsonb,
+    recommendations jsonb,
+    started_at timestamp without time zone NOT NULL,
+    expires_at timestamp without time zone NOT NULL,
+    finished_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT interview_session_check CHECK ((expires_at > started_at)),
+    CONSTRAINT interview_session_duration_minutes_check CHECK ((duration_minutes > 0))
+);
+
+
+ALTER TABLE public.interview_session OWNER TO postgres;
+
+--
+-- Name: interview_session_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.interview_session_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.interview_session_id_seq OWNER TO postgres;
+
+--
+-- Name: interview_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.interview_session_id_seq OWNED BY public.interview_session.id;
 
 
 --
@@ -473,6 +591,20 @@ ALTER TABLE ONLY public.profession ALTER COLUMN id SET DEFAULT nextval('public.p
 
 
 --
+-- Name: interview_message id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_message ALTER COLUMN id SET DEFAULT nextval('public.interview_message_id_seq'::regclass);
+
+
+--
+-- Name: interview_session id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_session ALTER COLUMN id SET DEFAULT nextval('public.interview_session_id_seq'::regclass);
+
+
+--
 -- Name: profession_chapter id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -526,6 +658,22 @@ ALTER TABLE ONLY public.user_test ALTER COLUMN id SET DEFAULT nextval('public.us
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Data for Name: interview_message; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.interview_message (id, interview_id, sequence_no, role, content, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: interview_session; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.interview_session (id, user_id, profession_id, interview_level, status, duration_minutes, profile_snapshot, prompt_version, llm_provider, llm_model, verdict_passed, summary, strengths, weaknesses, recommendations, started_at, expires_at, finished_at, created_at, updated_at) FROM stdin;
+\.
 
 
 --
@@ -1043,6 +1191,20 @@ SELECT pg_catalog.setval('public.profession_id_seq', 10, true);
 
 
 --
+-- Name: interview_message_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.interview_message_id_seq', 1, false);
+
+
+--
+-- Name: interview_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.interview_session_id_seq', 1, false);
+
+
+--
 -- Name: question_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -1124,6 +1286,30 @@ ALTER TABLE ONLY public.profession
 
 
 --
+-- Name: interview_message interview_message_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_message
+    ADD CONSTRAINT interview_message_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: interview_message interview_message_interview_id_sequence_no_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_message
+    ADD CONSTRAINT interview_message_interview_id_sequence_no_key UNIQUE (interview_id, sequence_no);
+
+
+--
+-- Name: interview_session interview_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_session
+    ADD CONSTRAINT interview_session_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: question question_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1196,6 +1382,34 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: idx_interview_message_interview_sequence; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_interview_message_interview_sequence ON public.interview_message USING btree (interview_id, sequence_no);
+
+
+--
+-- Name: idx_interview_session_one_in_progress_per_user; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX idx_interview_session_one_in_progress_per_user ON public.interview_session USING btree (user_id) WHERE (status = 'in_progress'::public.interview_status);
+
+
+--
+-- Name: idx_interview_session_status_expires_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_interview_session_status_expires_at ON public.interview_session USING btree (status, expires_at);
+
+
+--
+-- Name: idx_interview_session_user_started_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_interview_session_user_started_at ON public.interview_session USING btree (user_id, started_at DESC);
+
+
+--
 -- Name: chapter_technology chapter_technology_chapter_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1225,6 +1439,30 @@ ALTER TABLE ONLY public.profession_chapter
 
 ALTER TABLE ONLY public.profession_chapter
     ADD CONSTRAINT profession_chapter_profession_id_fkey FOREIGN KEY (profession_id) REFERENCES public.profession(id) ON DELETE CASCADE;
+
+
+--
+-- Name: interview_message interview_message_interview_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_message
+    ADD CONSTRAINT interview_message_interview_id_fkey FOREIGN KEY (interview_id) REFERENCES public.interview_session(id) ON DELETE CASCADE;
+
+
+--
+-- Name: interview_session interview_session_profession_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_session
+    ADD CONSTRAINT interview_session_profession_id_fkey FOREIGN KEY (profession_id) REFERENCES public.profession(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: interview_session interview_session_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.interview_session
+    ADD CONSTRAINT interview_session_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

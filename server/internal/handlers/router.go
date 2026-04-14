@@ -65,6 +65,14 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			tests.POST("/:id/answer/check", h.checkTestAnswer)
 			// tests.GET("/:id/statistics")
 		}
+
+		interviews := api.Group("/interviews")
+		{
+			interviews.POST("/start", h.startInterview)
+			interviews.POST("/:id/messages", h.sendInterviewAnswer)
+			interviews.POST("/:id/complete", h.completeInterview)
+			interviews.GET("/history", h.getInterviewHistory)
+		}
 	}
 
 	return router

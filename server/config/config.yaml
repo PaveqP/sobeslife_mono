@@ -16,3 +16,8 @@ redis:
   password: ""
   db: 0
   expirationMinutes: 1440
+
+llm:
+  baseUrl: "https://polza.ai/api/v1"
+  model: "openai/gpt-5.4-nano"
+  timeoutSeconds: 300

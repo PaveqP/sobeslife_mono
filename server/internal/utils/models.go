@@ -19,6 +19,21 @@ const (
 	TestCancelled  TestStatus = "cancelled"
 )
 
+type InterviewStatus string
+
+const (
+	InterviewInProgress  InterviewStatus = "in_progress"
+	InterviewCompleted   InterviewStatus = "completed"
+	InterviewSummaryFail InterviewStatus = "summary_failed"
+)
+
+type InterviewMessageRole string
+
+const (
+	InterviewMessageAssistant InterviewMessageRole = "assistant"
+	InterviewMessageUser      InterviewMessageRole = "user"
+)
+
 type Profession struct {
 	ID   string `json:"id" db:"id"`
 	Name string `json:"name" db:"name"`

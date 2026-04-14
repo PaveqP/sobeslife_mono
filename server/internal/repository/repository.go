@@ -33,11 +33,27 @@ type Shared interface {
 	GetTechnologiesByFilters(module string) ([]utils.Technology, error)
 }
 
+type Interviews interface {
+	GetActiveByUser(userID string) (*utils.InterviewSession, error)
+	GetByID(userID string, interviewID string) (*utils.InterviewSession, error)
+	ListExpiredByUser(userID string, currentTime string) ([]utils.InterviewSession, error)
+	ListHistory(userID string) ([]utils.InterviewHistoryItem, error)
+	GetUserProfile(userID string) (*utils.InterviewUserProfile, error)
+	GetProfessionByID(professionID int) (*utils.InterviewProfession, error)
+	GetProfessionByName(name string) (*utils.InterviewProfession, error)
+	ListMessages(interviewID int) ([]utils.InterviewMessage, error)
+	CreateSessionWithMessage(userID string, params utils.CreateInterviewSessionParams) (*utils.InterviewSession, *utils.InterviewMessage, error)
+	CreateUserMessage(interviewID int, userAnswer string) (*utils.InterviewMessage, error)
+	CreateTurnMessages(interviewID int, userAnswer string, assistantQuestion string) (*utils.InterviewMessage, *utils.InterviewMessage, error)
+	FinalizeInterview(interviewID int, params utils.InterviewFinalizeParams) (*utils.InterviewSession, error)
+}
+
 type Repository struct {
 	Authorization
 	Questions
 	Tests
 	Shared
+	Interviews
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -46,5 +62,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Questions:     newQuestionRepository(db),
 		Tests:         newTestsRepository(db),
 		Shared:        newSharedRepository(db),
+		Interviews:    newInterviewsRepository(db),
 	}
 }

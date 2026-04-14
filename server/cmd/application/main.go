@@ -5,6 +5,7 @@ import (
 	"os"
 	"sobeslife-services/internal/cache"
 	"sobeslife-services/internal/handlers"
+	"sobeslife-services/internal/llm"
 	"sobeslife-services/internal/repository"
 	"sobeslife-services/internal/server"
 	"sobeslife-services/internal/services"
@@ -68,7 +69,8 @@ func main() {
 		RefreshSigningKey: utils.GetEnv("REFRESH_SIGNING_KEY"),
 	})
 	repository := repository.NewRepository(db)
-	services := services.NewService(repository, jwt)
+	interviewLLM := llm.NewPolzaInterviewClient(cfg.LLM)
+	services := services.NewService(repository, jwt, interviewLLM)
 	handler := handlers.NewHandler(services, jwt, cacheService, "started successfully", time.Now())
 
 	c := cors.New(cors.Options{

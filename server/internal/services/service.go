@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+	"sobeslife-services/internal/llm"
 	"sobeslife-services/internal/repository"
 	"sobeslife-services/internal/utils"
 )
@@ -34,18 +36,27 @@ type Shared interface {
 	GetTechnologiesByFilters(module string) ([]utils.Technology, error)
 }
 
+type Interviews interface {
+	Start(ctx context.Context, userID string, request utils.StartInterviewRequest) (*utils.InterviewStartResponse, error)
+	SendAnswer(ctx context.Context, userID string, interviewID string, request utils.SendInterviewAnswerRequest) (*utils.InterviewTurnResponse, error)
+	Complete(ctx context.Context, userID string, interviewID string) (*utils.InterviewTurnResponse, error)
+	History(ctx context.Context, userID string) ([]utils.InterviewHistoryItem, error)
+}
+
 type Service struct {
 	Authorization
 	Questions
 	Tests
 	Shared
+	Interviews
 }
 
-func NewService(repo *repository.Repository, jwt *utils.JWTService) *Service {
+func NewService(repo *repository.Repository, jwt *utils.JWTService, interviewLLM llm.InterviewClient) *Service {
 	return &Service{
 		Authorization: newAuthService(repo, jwt),
 		Questions:     newQuestionService(repo),
 		Tests:         newTestsService(repo),
 		Shared:        newSharedService(repo),
+		Interviews:    newInterviewsService(repo, interviewLLM),
 	}
 }

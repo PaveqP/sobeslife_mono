@@ -47,6 +47,7 @@ func (h *Handler) identifyUser(c *gin.Context) {
 
 	c.Set(userIdKey, userId)
 	c.Set(isAdminKey, isAdmin)
+	c.Next()
 }
 
 func getUserId(c *gin.Context) (string, error) {
