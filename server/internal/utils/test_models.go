@@ -114,19 +114,28 @@ type TestQuestionDetails struct {
 }
 
 type TestDetailsResponse struct {
-	ID             int                 `json:"id" db:"id"`
-	Title          string              `json:"title" db:"title"`
-	Profession     string              `json:"profession" db:"profession"`
-	Chapter        *string             `json:"chapter" db:"chapter"`
-	Technology     *string             `json:"technology" db:"technology"`
-	ExpertiseLevel ExpertiseLevel      `json:"expertise_level" db:"expertise_level"`
-	Status         *TestStatus         `json:"status" db:"status"`
+	ID             int                   `json:"id" db:"id"`
+	Title          string                `json:"title" db:"title"`
+	Profession     string                `json:"profession" db:"profession"`
+	Chapter        *string               `json:"chapter" db:"chapter"`
+	Technology     *string               `json:"technology" db:"technology"`
+	ExpertiseLevel ExpertiseLevel        `json:"expertise_level" db:"expertise_level"`
+	Status         *TestStatus           `json:"status" db:"status"`
 	Questions      []TestQuestionDetails `json:"questions"`
 }
 
 type TestStatsResponse struct {
 	TestStats
 	Questions []TestQuestionStats `json:"questions"`
+}
+
+type UserTestsStatisticsResponse struct {
+	CompletedTestsCount   int     `db:"completed_tests_count" json:"completed_tests_count"`
+	CorrectAnswersCount   int     `db:"correct_answers_count" json:"correct_answers_count"`
+	IncorrectAnswersCount int     `db:"incorrect_answers_count" json:"incorrect_answers_count"`
+	MostErrorTopic        *string `db:"most_error_topic" json:"most_error_topic"`
+	LeastErrorTopic       *string `db:"least_error_topic" json:"least_error_topic"`
+	CorrectAnswersPercent float64 `db:"correct_answers_percent" json:"correct_answers_percent"`
 }
 
 type TestStats struct {

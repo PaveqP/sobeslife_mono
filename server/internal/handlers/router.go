@@ -58,12 +58,12 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		tests := api.Group("/tests")
 		{
 			tests.GET("/", h.getTests)
+			tests.GET("/statistics", h.getTestsStatistics)
 			tests.GET("/:id", h.getTestByID)
 			tests.POST("/generate", h.generateTest)
 			tests.POST("/:id/start", h.startTest)
 			tests.POST("/:id/complete", h.completeTest)
 			tests.POST("/:id/answer/check", h.checkTestAnswer)
-			// tests.GET("/:id/statistics")
 		}
 
 		interviews := api.Group("/interviews")

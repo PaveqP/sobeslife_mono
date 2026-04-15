@@ -158,6 +158,62 @@ func (tr *TestsRepository) GetByID(user_id string, test_id string) (*utils.TestD
 	return &testDetails, nil
 }
 
+func (tr *TestsRepository) GetStatistics(user_id string) (*utils.UserTestsStatisticsResponse, error) {
+	query := `WITH completed_tests AS (
+		SELECT DISTINCT ON (ut.test_id)
+			ut.test_id
+		FROM user_test ut
+		WHERE ut.user_id = $1
+			AND ut.test_status = 'completed'
+		ORDER BY ut.test_id, ut.completed_at DESC NULLS LAST, ut.id DESC
+	),
+	answer_stats AS (
+		SELECT
+			COUNT(*)::int AS total_questions_count,
+			COUNT(*) FILTER (WHERE tq.is_correct = true)::int AS correct_answers_count,
+			COUNT(*) FILTER (WHERE tq.is_correct = false)::int AS incorrect_answers_count
+		FROM completed_tests ct
+		JOIN test_question tq ON tq.test_id = ct.test_id
+	),
+	topic_stats AS (
+		SELECT
+			c.name AS topic,
+			COUNT(*)::int AS total_questions_count,
+			COUNT(*) FILTER (WHERE tq.is_correct = false)::int AS error_count
+		FROM completed_tests ct
+		JOIN test_question tq ON tq.test_id = ct.test_id
+		JOIN question q ON q.id = tq.question_id
+		JOIN chapter c ON c.id = q.chapter_id
+		GROUP BY c.name
+	)
+	SELECT
+		(SELECT COUNT(*)::int FROM completed_tests) AS completed_tests_count,
+		COALESCE((SELECT correct_answers_count FROM answer_stats), 0) AS correct_answers_count,
+		COALESCE((SELECT incorrect_answers_count FROM answer_stats), 0) AS incorrect_answers_count,
+		(SELECT topic FROM topic_stats ORDER BY error_count DESC, total_questions_count DESC, topic ASC LIMIT 1) AS most_error_topic,
+		(SELECT topic FROM topic_stats ORDER BY error_count ASC, total_questions_count DESC, topic ASC LIMIT 1) AS least_error_topic,
+		COALESCE(
+			ROUND(
+				CASE
+					WHEN COALESCE((SELECT total_questions_count FROM answer_stats), 0) = 0 THEN 0
+					ELSE (
+						(SELECT correct_answers_count FROM answer_stats)::numeric
+						/ (SELECT total_questions_count FROM answer_stats)::numeric
+					) * 100
+				END,
+				2
+			),
+			0
+		)::float8 AS correct_answers_percent`
+
+	var result utils.UserTestsStatisticsResponse
+	if err := tr.db.Get(&result, query, user_id); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
 func (tr *TestsRepository) Start(user_id string, test_id string, currentTime string, testStatus utils.TestStatus) error {
 	updateQuery := `
 		UPDATE user_test

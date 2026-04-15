@@ -50,6 +50,22 @@ func (h *Handler) getTestByID(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+func (h *Handler) getTestsStatistics(c *gin.Context) {
+	user_id, err := getUserId(c)
+	if err != nil {
+		return
+	}
+
+	result, err := h.services.Tests.GetStatistics(user_id)
+	if err != nil {
+		logrus.Errorf("Failed fetch tests statistics: %s", err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 func (h *Handler) generateTest(c *gin.Context) {
 	var testParameters utils.CreateTestRequest
 	if err := c.BindJSON(&testParameters); err != nil {

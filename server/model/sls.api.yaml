@@ -244,16 +244,16 @@ components:
     UserStatistics:
       type: object
       properties:
-        totalTestsTaken: { type: integer }
-        averageScore: { type: number }
-        passedTests:
-          type: array
-          items:
-            type: object
-            properties:
-              testId: { type: string }
-              score: { type: number }
-              passedAt: { type: string, format: date-time }
+        completed_tests_count: { type: integer }
+        correct_answers_count: { type: integer }
+        incorrect_answers_count: { type: integer }
+        most_error_topic:
+          type: string
+          nullable: true
+        least_error_topic:
+          type: string
+          nullable: true
+        correct_answers_percent: { type: number, format: float }
 
     AnswerVerificationRequest:
       type: object
@@ -293,5 +293,4 @@ components:
         correctRate:
           type: number
           format: float
-
 

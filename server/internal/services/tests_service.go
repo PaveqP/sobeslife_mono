@@ -62,6 +62,10 @@ func (ts *TestsService) GetByID(user_id string, test_id string) (*utils.TestDeta
 	return ts.r.Tests.GetByID(user_id, test_id)
 }
 
+func (ts *TestsService) GetStatistics(user_id string) (*utils.UserTestsStatisticsResponse, error) {
+	return ts.r.Tests.GetStatistics(user_id)
+}
+
 func (ts *TestsService) GetRandomQuestions(questions []utils.QuestionResponse) ([]string, []utils.QuestionResponse) {
 	if len(questions) == 0 {
 		return []string{}, []utils.QuestionResponse{}
