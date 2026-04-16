@@ -1,7 +1,10 @@
 package repository
 
 import (
+	"database/sql"
+	"fmt"
 	"sobeslife-services/internal/utils"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -42,6 +45,60 @@ func (r *AuthRepository) GetIsAdmin(userId string) (bool, error) {
 		return false, err
 	}
 	return isAdmin, nil
+}
+
+func (r *AuthRepository) UpdateUserProfile(userID string, params utils.UpdateUserProfileParams) (bool, error) {
+	fields := make([]string, 0, 3)
+	args := make([]interface{}, 0, 4)
+
+	if params.Nickname != nil {
+		args = append(args, *params.Nickname)
+		fields = append(fields, fmt.Sprintf("nickname = $%d", len(args)))
+	}
+	if params.ProfessionID != nil {
+		args = append(args, *params.ProfessionID)
+		fields = append(fields, fmt.Sprintf("profession_id = $%d", len(args)))
+	}
+	if params.Grade != nil {
+		args = append(args, *params.Grade)
+		fields = append(fields, fmt.Sprintf("expertise_level = $%d", len(args)))
+	}
+	if len(fields) == 0 {
+		return false, nil
+	}
+
+	args = append(args, userID)
+	query := fmt.Sprintf(
+		"UPDATE users SET %s WHERE id = $%d RETURNING id",
+		strings.Join(fields, ", "),
+		len(args),
+	)
+
+	var updatedUserID int
+	if err := r.db.Get(&updatedUserID, query, args...); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (r *AuthRepository) ListExpertiseLevels() ([]utils.ExpertiseLevel, error) {
+	query := "SELECT unnest(enum_range(NULL::expertise_level))::text"
+
+	var rawLevels []string
+	if err := r.db.Select(&rawLevels, query); err != nil {
+		return nil, err
+	}
+
+	levels := make([]utils.ExpertiseLevel, 0, len(rawLevels))
+	for _, level := range rawLevels {
+		levels = append(levels, utils.ExpertiseLevel(level))
+	}
+
+	return levels, nil
 }
 
 func (r *AuthRepository) GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error) {

@@ -49,6 +49,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			// technology.GET("/:id")
 			// technology.GET("/module/:id")
 		}
+		users := api.Group("/users")
+		{
+			users.GET("/me", h.getCurrentUserProfile)
+			users.PATCH("/me", h.updateCurrentUserProfile)
+		}
 		question := api.Group("/questions", h.metricsMiddleware)
 		{
 			question.GET("/", h.getQuestionsByFilters)

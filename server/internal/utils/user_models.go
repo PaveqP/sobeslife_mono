@@ -11,6 +11,26 @@ type User struct {
 	ExpertiseLevel ExpertiseLevel `json:"expertise_level" db:"expertise_level"`
 }
 
+type UserProfileResponse struct {
+	UserID       int             `json:"user_id"`
+	Nickname     *string         `json:"nickname,omitempty"`
+	ProfessionID *int            `json:"profession_id,omitempty"`
+	Profession   *string         `json:"profession,omitempty"`
+	Grade        *ExpertiseLevel `json:"grade,omitempty"`
+}
+
+type UpdateUserProfileRequest struct {
+	Profession *string `json:"profession"`
+	Grade      *string `json:"grade"`
+	Nickname   *string `json:"nickname"`
+}
+
+type UpdateUserProfileParams struct {
+	ProfessionID *int
+	Grade        *ExpertiseLevel
+	Nickname     *string
+}
+
 type UserTest struct {
 	ID          int        `json:"id" db:"id"`
 	UserID      int        `json:"user_id" db:"user_id"`

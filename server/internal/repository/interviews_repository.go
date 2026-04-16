@@ -149,7 +149,7 @@ func (r *InterviewsRepository) GetProfessionByID(professionID int) (*utils.Inter
 }
 
 func (r *InterviewsRepository) GetProfessionByName(name string) (*utils.InterviewProfession, error) {
-	query := `SELECT id, name FROM profession WHERE name = $1`
+	query := `SELECT id, name FROM profession WHERE LOWER(name) = LOWER($1) LIMIT 1`
 
 	var profession utils.InterviewProfession
 	err := r.db.Get(&profession, query, name)

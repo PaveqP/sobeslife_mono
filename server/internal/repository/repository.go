@@ -11,6 +11,8 @@ type Authorization interface {
 	GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error)
 	GetUserByPhoneNumber(phoneNumber string) (*utils.UserIdentity, error)
 	GetIsAdmin(userId string) (bool, error)
+	UpdateUserProfile(userID string, params utils.UpdateUserProfileParams) (bool, error)
+	ListExpertiseLevels() ([]utils.ExpertiseLevel, error)
 }
 
 type Questions interface {

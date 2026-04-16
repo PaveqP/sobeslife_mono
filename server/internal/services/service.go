@@ -14,6 +14,8 @@ type Authorization interface {
 	AuthByNickname(nickname string, password string) (*utils.TokensPair, error)
 	AuthByEmail(email string, password string) (*utils.TokensPair, error)
 	GetIsAdmin(userId string) (bool, error)
+	GetProfile(userID string) (*utils.UserProfileResponse, error)
+	UpdateProfile(userID string, request utils.UpdateUserProfileRequest) (*utils.UserProfileResponse, error)
 }
 
 type Questions interface {
