@@ -35,11 +35,23 @@ jobs:
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          DEV_DB_PASSWORD: ${{ secrets.DEV_DB_PASSWORD }}
+          DEV_CONFIG_PATH: ${{ secrets.DEV_CONFIG_PATH }}
+          DEV_ACCESS_SIGNING_KEY: ${{ secrets.DEV_ACCESS_SIGNING_KEY }}
+          DEV_REFRESH_SIGNING_KEY: ${{ secrets.DEV_REFRESH_SIGNING_KEY }}
+          DEV_POLZA_AI_API_KEY: ${{ secrets.DEV_POLZA_AI_API_KEY }}
+          DEV_OAUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.DEV_OAUTH_GOOGLE_CLIENT_SECRET }}
+          DEV_OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.DEV_OAUTH_GOOGLE_CLIENT_ID }}
+          DEV_OAUTH_GOOGLE_REDIRECT_URI: ${{ secrets.DEV_OAUTH_GOOGLE_REDIRECT_URI }}
+          DEV_HTTP_PORT: ${{ secrets.DEV_HTTP_PORT }}
+          DEV_VITE_API_URL: ${{ secrets.DEV_VITE_API_URL }}
         with:
           host: ${{ secrets.DEV_SSH_HOST }}
           username: ${{ secrets.DEV_SSH_USER }}
           key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
           script_stop: true
+          envs: DEV_DB_PASSWORD,DEV_CONFIG_PATH,DEV_ACCESS_SIGNING_KEY,DEV_REFRESH_SIGNING_KEY,DEV_POLZA_AI_API_KEY,DEV_OAUTH_GOOGLE_CLIENT_SECRET,DEV_OAUTH_GOOGLE_CLIENT_ID,DEV_OAUTH_GOOGLE_REDIRECT_URI,DEV_HTTP_PORT,DEV_VITE_API_URL
           script: |
             set -euo pipefail
             cd "${{ secrets.DEV_DEPLOY_PATH }}"
@@ -47,18 +59,44 @@ jobs:
             git fetch origin dev
             git checkout dev
             git pull --ff-only origin dev
+
+            required_vars=(
+              DEV_DB_PASSWORD
+              DEV_CONFIG_PATH
+              DEV_ACCESS_SIGNING_KEY
+              DEV_REFRESH_SIGNING_KEY
+              DEV_POLZA_AI_API_KEY
+              DEV_OAUTH_GOOGLE_CLIENT_SECRET
+              DEV_OAUTH_GOOGLE_CLIENT_ID
+              DEV_OAUTH_GOOGLE_REDIRECT_URI
+            )
+
+            for var_name in "${required_vars[@]}"; do
+              if [ -z "${!var_name:-}" ]; then
+                echo "Missing required deploy variable: $var_name" >&2
+                exit 1
+              fi
+            done
+
             umask 077
-            cat > .env <<'EOF'
-            DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
-            CONFIG_PATH=${{ secrets.DEV_CONFIG_PATH }}
-            ACCESS_SIGNING_KEY=${{ secrets.DEV_ACCESS_SIGNING_KEY }}
-            REFRESH_SIGNING_KEY=${{ secrets.DEV_REFRESH_SIGNING_KEY }}
-            POLZA_AI_API_KEY=${{ secrets.DEV_POLZA_AI_API_KEY }}
-            OAUTH_GOOGLE_CLIENT_SECRET=${{ secrets.DEV_OAUTH_GOOGLE_CLIENT_SECRET }}
-            OAUTH_GOOGLE_CLIENT_ID=${{ secrets.DEV_OAUTH_GOOGLE_CLIENT_ID }}
-            OAUTH_GOOGLE_REDIRECT_URI=${{ secrets.DEV_OAUTH_GOOGLE_REDIRECT_URI }}
-            HTTP_PORT=${{ secrets.DEV_HTTP_PORT }}
-            VITE_API_URL=${{ secrets.DEV_VITE_API_URL }}
-            EOF
+            {
+              printf 'DB_PASSWORD=%s\n' "$DEV_DB_PASSWORD"
+              printf 'CONFIG_PATH=%s\n' "$DEV_CONFIG_PATH"
+              printf 'ACCESS_SIGNING_KEY=%s\n' "$DEV_ACCESS_SIGNING_KEY"
+              printf 'REFRESH_SIGNING_KEY=%s\n' "$DEV_REFRESH_SIGNING_KEY"
+              printf 'POLZA_AI_API_KEY=%s\n' "$DEV_POLZA_AI_API_KEY"
+              printf 'OAUTH_GOOGLE_CLIENT_SECRET=%s\n' "$DEV_OAUTH_GOOGLE_CLIENT_SECRET"
+              printf 'OAUTH_GOOGLE_CLIENT_ID=%s\n' "$DEV_OAUTH_GOOGLE_CLIENT_ID"
+              printf 'OAUTH_GOOGLE_REDIRECT_URI=%s\n' "$DEV_OAUTH_GOOGLE_REDIRECT_URI"
+
+              if [ -n "${DEV_HTTP_PORT:-}" ]; then
+                printf 'HTTP_PORT=%s\n' "$DEV_HTTP_PORT"
+              fi
+
+              if [ -n "${DEV_VITE_API_URL:-}" ]; then
+                printf 'VITE_API_URL=%s\n' "$DEV_VITE_API_URL"
+              fi
+            } > .env
+
             docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
             docker compose -f docker-compose.deploy.yml --env-file .env ps
