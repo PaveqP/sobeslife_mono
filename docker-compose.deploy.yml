@@ -28,6 +28,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      OAUTH_GOOGLE_REDIRECT_URI: https://dev.sobeslife.ru/auth/google
 
   db:
     image: postgres:16

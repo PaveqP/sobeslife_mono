@@ -1,5 +1,6 @@
 import { Navigate, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { useAppSelector } from '@/app/store'
+import { GoogleAuthCallbackPage } from '@/pages/google-auth-callback-page'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RootLayout } from '@/pages/root-layout'
 import { SignInPage } from '@/pages/sign-in-page'
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
   {
     path: '/sign-up',
     element: <SignUpPage />,
+  },
+  {
+    path: '/auth/google',
+    element: <GoogleAuthCallbackPage />,
   },
   {
     element: <RequireAuth />,

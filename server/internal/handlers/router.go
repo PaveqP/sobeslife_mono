@@ -29,6 +29,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		auth.POST("/sign-up", h.signUp)
 		auth.POST("/sign-in", h.signIn)
+		auth.GET("/google/url", h.googleUrl)
+		auth.POST("/google/callback", h.googleCallback)
 	}
 	api := router.Group("/api", h.identifyUser)
 	{

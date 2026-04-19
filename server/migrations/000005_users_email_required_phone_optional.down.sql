@@ -1,0 +1,3 @@
+ALTER TABLE users
+    ALTER COLUMN email DROP NOT NULL,
+    ALTER COLUMN phone_number SET NOT NULL;

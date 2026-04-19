@@ -8,7 +8,9 @@ import (
 
 type Authorization interface {
 	CreateUser(userParams utils.CreateUserQuery) (string, error)
+	CreateGoogleUser(email string, nickname string, passwordHash string) (string, error)
 	GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error)
+	GetUserByEmail(email string) (*utils.UserIdentity, error)
 	GetUserByPhoneNumber(phoneNumber string) (*utils.UserIdentity, error)
 	GetIsAdmin(userId string) (bool, error)
 	UpdateUserProfile(userID string, params utils.UpdateUserProfileParams) (bool, error)

@@ -16,6 +16,8 @@ type Authorization interface {
 	GetIsAdmin(userId string) (bool, error)
 	GetProfile(userID string) (*utils.UserProfileResponse, error)
 	UpdateProfile(userID string, request utils.UpdateUserProfileRequest) (*utils.UserProfileResponse, error)
+	GenerateGoogleOauthRedirectURI(state string, codeChallenge string) string
+	AuthByGoogleWithCode(code string, codeVerifier string) (*utils.TokensPair, error)
 }
 
 type Questions interface {

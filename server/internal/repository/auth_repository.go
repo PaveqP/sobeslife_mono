@@ -27,6 +27,34 @@ func (r *AuthRepository) CreateUser(userParams utils.CreateUserQuery) (string, e
 	return userId, nil
 }
 
+func (r *AuthRepository) CreateGoogleUser(email string, nickname string, passwordHash string) (string, error) {
+	query := "INSERT INTO users (nickname, email, phone_number, password_hash, is_admin) VALUES ($1, $2, NULL, $3, $4) RETURNING id"
+	row := r.db.QueryRow(query, nickname, email, passwordHash, false)
+	var userId string
+	if err := row.Scan(&userId); err != nil {
+		return "", err
+	}
+	return userId, nil
+}
+
+func (r *AuthRepository) GetUserByEmail(email string) (*utils.UserIdentity, error) {
+	query := "SELECT id, password_hash FROM users WHERE lower(email) = lower($1) LIMIT 2"
+
+	var users []utils.UserIdentity
+	if err := r.db.Select(&users, query, email); err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, nil
+	}
+	if len(users) > 1 {
+		return nil, fmt.Errorf("multiple users found with email %s", email)
+	}
+
+	return &users[0], nil
+}
+
 func (r *AuthRepository) GetUserByPhoneNumber(phoneNumber string) (*utils.UserIdentity, error) {
 	query := "SELECT id, password_hash FROM users WHERE phone_number = $1"
 	var userCredentials utils.UserIdentity

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/store'
 import { setCredentials } from '@/features/auth/auth-slice'
-import { useSignInMutation } from '@/shared/api/auth-api'
+import { useSignInMutation, useStartGoogleAuthMutation } from '@/shared/api/auth-api'
+import { prepareGoogleOauthSession } from '@/shared/lib/oauth'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/form-controls'
 import { Card } from '@/shared/ui/surfaces'
@@ -13,11 +14,13 @@ export const SignInPage = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const location = useLocation()
+  const [googleErrorMessage, setGoogleErrorMessage] = useState<string | null>(null)
   const [formState, setFormState] = useState({
     phone_number: '',
     password: '',
   })
   const [signIn, { isLoading, error }] = useSignInMutation()
+  const [startGoogleAuth, { isLoading: isGoogleLoading }] = useStartGoogleAuthMutation()
 
   if (accessToken) {
     return <Navigate to="/" replace />
@@ -34,6 +37,17 @@ export const SignInPage = () => {
     const tokens = await signIn(formState).unwrap()
     dispatch(setCredentials(tokens))
     navigate('/')
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleErrorMessage(null)
+      const oauthSession = await prepareGoogleOauthSession()
+      const redirectUrl = await startGoogleAuth(oauthSession).unwrap()
+      window.location.assign(redirectUrl)
+    } catch {
+      setGoogleErrorMessage('Не удалось начать вход через Google. Попробуйте снова.')
+    }
   }
 
   return (
@@ -72,7 +86,7 @@ export const SignInPage = () => {
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold text-text-primary">Вход</h2>
             <p className="text-sm text-text-secondary">
-              На текущем сервере авторизация работает по номеру телефона.
+              Войдите по номеру телефона и паролю или используйте Google-аккаунт.
             </p>
           </div>
 
@@ -85,6 +99,12 @@ export const SignInPage = () => {
           {error ? (
             <div className="rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
               Не удалось войти. Проверь номер телефона и пароль.
+            </div>
+          ) : null}
+
+          {googleErrorMessage ? (
+            <div className="rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">
+              {googleErrorMessage}
             </div>
           ) : null}
 
@@ -112,6 +132,10 @@ export const SignInPage = () => {
               Войти
             </Button>
           </form>
+
+          <Button type="button" variant="ghost" className="w-full" loading={isGoogleLoading} onClick={handleGoogleSignIn}>
+            Продолжить через Google
+          </Button>
 
           <p className="text-sm text-text-secondary">
             Еще нет аккаунта?{' '}

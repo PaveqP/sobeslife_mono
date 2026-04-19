@@ -63,7 +63,32 @@ type AuthRequest struct {
 	Password    string  `json:"password" db:"password"`
 }
 
+type GoogleCodeCallback struct {
+	Code         *string `json:"code"`
+	CodeVerifier *string `json:"code_verifier"`
+}
+
 type UserIdentity struct {
 	UserId         string `json:"user_id" db:"id"`
 	HashedPassword string `json:"password" db:"password_hash"`
+}
+
+type GoogleErrorResponse struct {
+	Error            string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+}
+
+type GoogleTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token,omitempty"`
+	Scope        string `json:"scope"`
+	TokenType    string `json:"token_type"`
+	IDToken      string `json:"id_token"`
+}
+
+type GoogleUserInfoResponse struct {
+	Sub           string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
 }

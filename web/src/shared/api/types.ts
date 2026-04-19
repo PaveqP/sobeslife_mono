@@ -11,6 +11,16 @@ export type AuthTokens = {
   refreshToken: string
 }
 
+export type GoogleAuthUrlRequest = {
+  state: string
+  codeChallenge: string
+}
+
+export type GoogleAuthCallbackRequest = {
+  code: string
+  code_verifier: string
+}
+
 export type SignInRequest = {
   phone_number: string
   password: string
