@@ -53,26 +53,25 @@ jobs:
           script_stop: true
           envs: DEV_DB_PASSWORD,DEV_CONFIG_PATH,DEV_ACCESS_SIGNING_KEY,DEV_REFRESH_SIGNING_KEY,DEV_POLZA_AI_API_KEY,DEV_OAUTH_GOOGLE_CLIENT_SECRET,DEV_OAUTH_GOOGLE_CLIENT_ID,DEV_OAUTH_GOOGLE_REDIRECT_URI,DEV_HTTP_PORT,DEV_VITE_API_URL
           script: |
-            set -euo pipefail
+            set -eu
             cd "${{ secrets.DEV_DEPLOY_PATH }}"
             git config --global --add safe.directory "$(pwd)" || true
             git fetch origin dev
             git checkout dev
             git pull --ff-only origin dev
 
-            required_vars=(
-              DEV_DB_PASSWORD
-              DEV_CONFIG_PATH
-              DEV_ACCESS_SIGNING_KEY
-              DEV_REFRESH_SIGNING_KEY
-              DEV_POLZA_AI_API_KEY
-              DEV_OAUTH_GOOGLE_CLIENT_SECRET
-              DEV_OAUTH_GOOGLE_CLIENT_ID
+            for var_name in \
+              DEV_DB_PASSWORD \
+              DEV_CONFIG_PATH \
+              DEV_ACCESS_SIGNING_KEY \
+              DEV_REFRESH_SIGNING_KEY \
+              DEV_POLZA_AI_API_KEY \
+              DEV_OAUTH_GOOGLE_CLIENT_SECRET \
+              DEV_OAUTH_GOOGLE_CLIENT_ID \
               DEV_OAUTH_GOOGLE_REDIRECT_URI
-            )
-
-            for var_name in "${required_vars[@]}"; do
-              if [ -z "${!var_name:-}" ]; then
+            do
+              eval "var_value=\${$var_name-}"
+              if [ -z "$var_value" ]; then
                 echo "Missing required deploy variable: $var_name" >&2
                 exit 1
               fi
