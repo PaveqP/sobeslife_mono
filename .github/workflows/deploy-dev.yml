@@ -60,42 +60,27 @@ jobs:
             git checkout dev
             git pull --ff-only origin dev
 
-            for var_name in \
-              DEV_DB_PASSWORD \
-              DEV_CONFIG_PATH \
-              DEV_ACCESS_SIGNING_KEY \
-              DEV_REFRESH_SIGNING_KEY \
-              DEV_POLZA_AI_API_KEY \
-              DEV_OAUTH_GOOGLE_CLIENT_SECRET \
-              DEV_OAUTH_GOOGLE_CLIENT_ID \
-              DEV_OAUTH_GOOGLE_REDIRECT_URI
-            do
-              eval "var_value=\${$var_name-}"
-              if [ -z "$var_value" ]; then
-                echo "Missing required deploy variable: $var_name" >&2
-                exit 1
-              fi
-            done
+            [ -n "${DEV_DB_PASSWORD:-}" ] || { echo "Missing required deploy variable: DEV_DB_PASSWORD" >&2; exit 1; }
+            [ -n "${DEV_CONFIG_PATH:-}" ] || { echo "Missing required deploy variable: DEV_CONFIG_PATH" >&2; exit 1; }
+            [ -n "${DEV_ACCESS_SIGNING_KEY:-}" ] || { echo "Missing required deploy variable: DEV_ACCESS_SIGNING_KEY" >&2; exit 1; }
+            [ -n "${DEV_REFRESH_SIGNING_KEY:-}" ] || { echo "Missing required deploy variable: DEV_REFRESH_SIGNING_KEY" >&2; exit 1; }
+            [ -n "${DEV_POLZA_AI_API_KEY:-}" ] || { echo "Missing required deploy variable: DEV_POLZA_AI_API_KEY" >&2; exit 1; }
+            [ -n "${DEV_OAUTH_GOOGLE_CLIENT_SECRET:-}" ] || { echo "Missing required deploy variable: DEV_OAUTH_GOOGLE_CLIENT_SECRET" >&2; exit 1; }
+            [ -n "${DEV_OAUTH_GOOGLE_CLIENT_ID:-}" ] || { echo "Missing required deploy variable: DEV_OAUTH_GOOGLE_CLIENT_ID" >&2; exit 1; }
+            [ -n "${DEV_OAUTH_GOOGLE_REDIRECT_URI:-}" ] || { echo "Missing required deploy variable: DEV_OAUTH_GOOGLE_REDIRECT_URI" >&2; exit 1; }
 
             umask 077
-            {
-              printf 'DB_PASSWORD=%s\n' "$DEV_DB_PASSWORD"
-              printf 'CONFIG_PATH=%s\n' "$DEV_CONFIG_PATH"
-              printf 'ACCESS_SIGNING_KEY=%s\n' "$DEV_ACCESS_SIGNING_KEY"
-              printf 'REFRESH_SIGNING_KEY=%s\n' "$DEV_REFRESH_SIGNING_KEY"
-              printf 'POLZA_AI_API_KEY=%s\n' "$DEV_POLZA_AI_API_KEY"
-              printf 'OAUTH_GOOGLE_CLIENT_SECRET=%s\n' "$DEV_OAUTH_GOOGLE_CLIENT_SECRET"
-              printf 'OAUTH_GOOGLE_CLIENT_ID=%s\n' "$DEV_OAUTH_GOOGLE_CLIENT_ID"
-              printf 'OAUTH_GOOGLE_REDIRECT_URI=%s\n' "$DEV_OAUTH_GOOGLE_REDIRECT_URI"
-
-              if [ -n "${DEV_HTTP_PORT:-}" ]; then
-                printf 'HTTP_PORT=%s\n' "$DEV_HTTP_PORT"
-              fi
-
-              if [ -n "${DEV_VITE_API_URL:-}" ]; then
-                printf 'VITE_API_URL=%s\n' "$DEV_VITE_API_URL"
-              fi
-            } > .env
+            : > .env
+            printf 'DB_PASSWORD=%s\n' "$DEV_DB_PASSWORD" >> .env
+            printf 'CONFIG_PATH=%s\n' "$DEV_CONFIG_PATH" >> .env
+            printf 'ACCESS_SIGNING_KEY=%s\n' "$DEV_ACCESS_SIGNING_KEY" >> .env
+            printf 'REFRESH_SIGNING_KEY=%s\n' "$DEV_REFRESH_SIGNING_KEY" >> .env
+            printf 'POLZA_AI_API_KEY=%s\n' "$DEV_POLZA_AI_API_KEY" >> .env
+            printf 'OAUTH_GOOGLE_CLIENT_SECRET=%s\n' "$DEV_OAUTH_GOOGLE_CLIENT_SECRET" >> .env
+            printf 'OAUTH_GOOGLE_CLIENT_ID=%s\n' "$DEV_OAUTH_GOOGLE_CLIENT_ID" >> .env
+            printf 'OAUTH_GOOGLE_REDIRECT_URI=%s\n' "$DEV_OAUTH_GOOGLE_REDIRECT_URI" >> .env
+            if [ -n "${DEV_HTTP_PORT:-}" ]; then printf 'HTTP_PORT=%s\n' "$DEV_HTTP_PORT" >> .env; fi
+            if [ -n "${DEV_VITE_API_URL:-}" ]; then printf 'VITE_API_URL=%s\n' "$DEV_VITE_API_URL" >> .env; fi
 
             docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
             docker compose -f docker-compose.deploy.yml --env-file .env ps
