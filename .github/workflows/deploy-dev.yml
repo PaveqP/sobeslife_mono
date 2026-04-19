@@ -5,6 +5,17 @@
 #   DEV_SSH_USER       — e.g. deploy
 #   DEV_SSH_PRIVATE_KEY — full PEM private key (include BEGIN/END lines)
 #   DEV_DEPLOY_PATH    — absolute path to repo on server, e.g. /opt/sobeslife
+#   DEV_DB_PASSWORD
+#   DEV_CONFIG_PATH
+#   DEV_ACCESS_SIGNING_KEY
+#   DEV_REFRESH_SIGNING_KEY
+#   DEV_POLZA_AI_API_KEY
+#   DEV_OAUTH_GOOGLE_CLIENT_SECRET
+#   DEV_OAUTH_GOOGLE_CLIENT_ID
+#   DEV_OAUTH_GOOGLE_REDIRECT_URI
+# Optional GitHub repository secrets:
+#   DEV_HTTP_PORT
+#   DEV_VITE_API_URL
 
 name: Deploy dev stand
 
@@ -36,5 +47,18 @@ jobs:
             git fetch origin dev
             git checkout dev
             git pull --ff-only origin dev
+            umask 077
+            cat > .env <<'EOF'
+            DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
+            CONFIG_PATH=${{ secrets.DEV_CONFIG_PATH }}
+            ACCESS_SIGNING_KEY=${{ secrets.DEV_ACCESS_SIGNING_KEY }}
+            REFRESH_SIGNING_KEY=${{ secrets.DEV_REFRESH_SIGNING_KEY }}
+            POLZA_AI_API_KEY=${{ secrets.DEV_POLZA_AI_API_KEY }}
+            OAUTH_GOOGLE_CLIENT_SECRET=${{ secrets.DEV_OAUTH_GOOGLE_CLIENT_SECRET }}
+            OAUTH_GOOGLE_CLIENT_ID=${{ secrets.DEV_OAUTH_GOOGLE_CLIENT_ID }}
+            OAUTH_GOOGLE_REDIRECT_URI=${{ secrets.DEV_OAUTH_GOOGLE_REDIRECT_URI }}
+            HTTP_PORT=${{ secrets.DEV_HTTP_PORT }}
+            VITE_API_URL=${{ secrets.DEV_VITE_API_URL }}
+            EOF
             docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
             docker compose -f docker-compose.deploy.yml --env-file .env ps

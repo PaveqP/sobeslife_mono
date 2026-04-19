@@ -252,6 +252,16 @@ GitHub → **Settings → Secrets and variables → Actions → New repository s
 | `DEV_SSH_USER` | пользователь с правом `docker` и доступом к `/opt/sobeslife` |
 | `DEV_SSH_PRIVATE_KEY` | **полный** приватный ключ (строки `BEGIN` … `END` включительно) |
 | `DEV_DEPLOY_PATH` | `/opt/sobeslife` |
+| `DEV_DB_PASSWORD` | пароль Postgres для dev-стенда |
+| `DEV_CONFIG_PATH` | `config/docker-config.yaml` |
+| `DEV_ACCESS_SIGNING_KEY` | signing key для access JWT |
+| `DEV_REFRESH_SIGNING_KEY` | signing key для refresh JWT |
+| `DEV_POLZA_AI_API_KEY` | ключ Polza AI |
+| `DEV_OAUTH_GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `DEV_OAUTH_GOOGLE_CLIENT_ID` | Google OAuth client id |
+| `DEV_OAUTH_GOOGLE_REDIRECT_URI` | `https://dev.sobeslife.ru/auth/google` |
+| `DEV_HTTP_PORT` | опционально, например `80` или `8080` |
+| `DEV_VITE_API_URL` | опционально; для same-origin оставьте пустым |
 
 Рекомендуется отдельная пара ключей **только для CI**: на сервере в `~/.ssh/authorized_keys` добавьте **публичную** часть ключа, **приватную** положите в секрет `DEV_SSH_PRIVATE_KEY`.
 
@@ -280,9 +290,10 @@ chmod 600 ~/.ssh/authorized_keys
 1. `cd $DEV_DEPLOY_PATH`
 2. `git config --global --add safe.directory` (на случай предупреждений о владельце)
 3. `git fetch`, `checkout dev`, `git pull --ff-only origin dev`
-4. `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build`
+4. workflow собирает `.env` на сервере из GitHub Secrets
+5. `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build`
 
-Файл `.env` на сервере должен **уже существовать** до первого деплоя из Actions — он не из репозитория и при `git pull` не затирается.
+При деплое через Actions файл `.env` на сервере создаётся заново из GitHub Secrets, поэтому заранее подготавливать его для CI не нужно.
 
 ### D3. Ручной запуск
 
