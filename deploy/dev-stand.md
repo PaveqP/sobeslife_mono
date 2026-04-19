@@ -291,7 +291,9 @@ chmod 600 ~/.ssh/authorized_keys
 2. `git config --global --add safe.directory` (на случай предупреждений о владельце)
 3. `git fetch`, `checkout dev`, `git pull --ff-only origin dev`
 4. workflow собирает `.env` на сервере из GitHub Secrets
-5. `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build`
+5. поднимает `db` и `redis`
+6. автоматически применяет новые SQL-миграции из `server/migrations/*.up.sql`
+7. запускает `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build app web`
 
 При деплое через Actions файл `.env` на сервере создаётся заново из GitHub Secrets, поэтому заранее подготавливать его для CI не нужно.
 
