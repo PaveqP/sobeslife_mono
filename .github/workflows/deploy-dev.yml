@@ -82,8 +82,5 @@ jobs:
             if [ -n "${DEV_HTTP_PORT:-}" ]; then printf 'HTTP_PORT=%s\n' "$DEV_HTTP_PORT" >> .env; fi
             if [ -n "${DEV_VITE_API_URL:-}" ]; then printf 'VITE_API_URL=%s\n' "$DEV_VITE_API_URL" >> .env; fi
 
-            docker compose -f docker-compose.deploy.yml --env-file .env up -d db redis
-            docker compose -f docker-compose.deploy.yml --env-file .env exec -T db sh -c 'until pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done'
-            sh deploy/apply_migrations.sh docker-compose.deploy.yml .env
-            docker compose -f docker-compose.deploy.yml --env-file .env up -d --build app web
+            docker compose -f docker-compose.deploy.yml --env-file .env up -d --build
             docker compose -f docker-compose.deploy.yml --env-file .env ps
