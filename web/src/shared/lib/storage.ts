@@ -1,3 +1,4 @@
+/** Ключи только для веб-приложения (пользовательский JWT aud=web). Не совпадают с admin. */
 const ACCESS_TOKEN_KEY = 'sobeslife.accessToken'
 const REFRESH_TOKEN_KEY = 'sobeslife.refreshToken'
 const THEME_KEY = 'sobeslife.theme'

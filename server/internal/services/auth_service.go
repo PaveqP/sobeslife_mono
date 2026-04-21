@@ -58,7 +58,7 @@ func (as *AuthService) AuthByNumber(phoneNumber string, password string) (*utils
 		return nil, errors.New("incorrect password")
 	}
 
-	tokens, err := as.hs.GeneratedTokensPair(userCredentials.UserId)
+	tokens, err := as.hs.GeneratedTokensPair(userCredentials.UserId, utils.AudienceWeb)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (as *AuthService) AuthByEmail(email string, password string) (*utils.Tokens
 		return nil, errors.New("incorrect password")
 	}
 
-	tokens, err := as.hs.GeneratedTokensPair(userCredentials.UserId)
+	tokens, err := as.hs.GeneratedTokensPair(userCredentials.UserId, utils.AudienceWeb)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func (as *AuthService) AuthByGoogleWithCode(code string, codeVerifier string) (*
 		}
 	}
 
-	return as.hs.GeneratedTokensPair(userID)
+	return as.hs.GeneratedTokensPair(userID, utils.AudienceWeb)
 }
 
 func (as *AuthService) exchangeGoogleCode(code string, codeVerifier string) (*utils.GoogleTokenResponse, error) {

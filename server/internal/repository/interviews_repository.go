@@ -456,7 +456,7 @@ func (r *InterviewsRepository) ListHistory(userID string) ([]utils.InterviewHist
 	WHERE s.user_id = $1
 	ORDER BY s.started_at DESC, s.id DESC`
 
-	var history []utils.InterviewHistoryItem
+	history := make([]utils.InterviewHistoryItem, 0)
 	if err := r.db.Select(&history, query, userID); err != nil {
 		return nil, err
 	}

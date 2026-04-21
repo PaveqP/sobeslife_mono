@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"sobeslife-services/internal/cache"
+	"sobeslife-services/internal/dbmigrate"
 	"sobeslife-services/internal/handlers"
 	"sobeslife-services/internal/llm"
 	"sobeslife-services/internal/repository"
@@ -29,6 +30,24 @@ func main() {
 		PadLevelText:  true,
 	})
 	cfg := utils.MustLoadConfig()
+
+	if os.Getenv("SKIP_DB_MIGRATIONS") != "1" && os.Getenv("SKIP_DB_MIGRATIONS") != "true" {
+		if err := dbmigrate.Run(
+			repository.Config{
+				Host:     cfg.DB.Host,
+				Port:     cfg.DB.Port,
+				Username: cfg.DB.Username,
+				Password: utils.GetEnv("DB_PASSWORD"),
+				DBName:   cfg.DB.DBName,
+				SSLMode:  cfg.DB.SSLMode,
+			},
+			dbmigrate.ResolveDir(),
+		); err != nil {
+			logrus.Fatalf("DB migrations failed: %s", err)
+		}
+	} else {
+		logrus.Warn("SKIP_DB_MIGRATIONS is set — database migrations were not applied")
+	}
 
 	redisClient := cache.NewRedisClient(cache.RedisConfig{
 		Addr:     cfg.Redis.Addr,

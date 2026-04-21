@@ -14,7 +14,8 @@ tasks:
     cmds:
       - docker-compose exec -T db pg_dump -U postgres postgres > backup_$(date +%Y%m%d_%H%M%S).sql
   apply-backup:
+    desc: "Восстановить БД из ../backup.sql (файл в корне репозитория)"
     cmds:
-      - docker compose exec -T db psql -U postgres postgres < postgres-init/db_dump.sql
+      - docker compose exec -T db psql -U postgres postgres < ../backup.sql
 
 

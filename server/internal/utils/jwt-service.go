@@ -12,14 +12,15 @@ type JWTConfig struct {
 }
 
 type TokensPair struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }
 
+// TokenHandling — access-токены разделены по audience (web vs admin).
 type TokenHandling interface {
-	GeneratedTokensPair(userId string) (*TokensPair, error)
-	VerifyAccessToken(accessToken string) (string, error)
-	VerifyRefreshToken(refreshToken string) (string, error)
+	GeneratedTokensPair(userId string, audience string) (*TokensPair, error)
+	VerifyWebAccessToken(accessToken string) (string, error)
+	VerifyAdminAccessToken(accessToken string) (string, error)
 	RefreshTokens(refreshToken string) (*TokensPair, error)
 }
 

@@ -48,20 +48,47 @@ type Interviews interface {
 	History(ctx context.Context, userID string) ([]utils.InterviewHistoryItem, error)
 }
 
+type AdminServiceInterface interface {
+	CreateAdmin(req utils.AdminCreateRequest) (*utils.AdminTokenResponse, error)
+	SignIn(req utils.AdminSignInRequest) (*utils.AdminTokenResponse, error)
+	GetStats() (*utils.AdminStatsResponse, error)
+	ListAdmins() ([]utils.AdminListAdminItem, error)
+	DeleteAdmin(id int) error
+	ListWebUsers() ([]utils.AdminUserListItem, error)
+	CreateWebUser(req utils.AdminCreateWebUserRequest) (*utils.AdminUserListItem, error)
+	UpdateWebUser(id int, req utils.AdminUpdateWebUserRequest) (*utils.AdminUserListItem, error)
+	DeleteWebUser(id int) error
+	ListInterviews() ([]utils.AdminInterviewListItem, error)
+	DeleteInterview(id int) error
+	GetAnalytics() (*utils.AdminAnalyticsResponse, error)
+	ListAdminTests() ([]utils.TestListItem, error)
+	CreateAdminTest(req utils.AdminCreateTestRequest) (*utils.TestListItem, error)
+	DeleteAdminTest(id int) error
+	ListTestQuestions(testID int) ([]utils.AdminTestQuestionItem, error)
+	AddQuestionToTest(testID, questionID int) error
+	RemoveQuestionFromTest(testID, questionID int) error
+	ListQuestions(filters utils.AdminQuestionFilters) ([]utils.AdminQuestionListItem, error)
+	CreateQuestion(req utils.AdminCreateQuestionRequest) (*utils.AdminQuestionListItem, error)
+	UpdateQuestion(id int, req utils.AdminUpdateQuestionRequest) (*utils.AdminQuestionListItem, error)
+	DeleteQuestion(id int) error
+}
+
 type Service struct {
 	Authorization
 	Questions
 	Tests
 	Shared
 	Interviews
+	AdminServiceInterface
 }
 
 func NewService(repo *repository.Repository, jwt *utils.JWTService, interviewLLM llm.InterviewClient) *Service {
 	return &Service{
-		Authorization: newAuthService(repo, jwt),
-		Questions:     newQuestionService(repo),
-		Tests:         newTestsService(repo),
-		Shared:        newSharedService(repo),
-		Interviews:    newInterviewsService(repo, interviewLLM),
+		Authorization:        newAuthService(repo, jwt),
+		Questions:            newQuestionService(repo),
+		Tests:                newTestsService(repo),
+		Shared:               newSharedService(repo),
+		Interviews:           newInterviewsService(repo, interviewLLM),
+		AdminServiceInterface: newAdminService(repo.Admin, jwt),
 	}
 }

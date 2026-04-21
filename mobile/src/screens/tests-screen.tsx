@@ -77,6 +77,7 @@ export const TestsScreen = ({ navigation }: AppScreenProps<'Tests'>) => {
     <Screen>
       <View style={styles.headerRow}>
         <ThemeToggle />
+        <AppButton title="Собеседования" variant="ghost" onPress={() => navigation.navigate('Interviews')} />
         <AppButton title="Выйти" variant="ghost" onPress={handleLogout} />
       </View>
 

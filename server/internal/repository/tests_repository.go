@@ -103,7 +103,7 @@ func (tr *TestsRepository) List(user_id string, filters utils.TestListFilters) (
 	ORDER BY t.id ASC`
 
 	args := append([]interface{}{user_id}, params...)
-	var result []utils.TestListItem
+	result := make([]utils.TestListItem, 0)
 	if err := tr.db.Select(&result, query, args...); err != nil {
 		return nil, err
 	}

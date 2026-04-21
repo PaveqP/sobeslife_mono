@@ -5,6 +5,8 @@ export type RootStackParamList = {
   SignUp: undefined
   Tests: undefined
   TestRun: { testId: number }
+  Interviews: undefined
+  InterviewRun: { interviewId: number; firstQuestion: string }
 }
 
 export type AppScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<

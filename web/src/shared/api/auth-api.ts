@@ -1,9 +1,17 @@
 import { baseApi } from '@/shared/api/base-api'
 import type { AuthTokens, GoogleAuthCallbackRequest, GoogleAuthUrlRequest, SignInRequest, SignUpRequest } from '@/shared/api/types'
 
-type ServerTokens = {
-  AccessToken: string
-  RefreshToken: string
+/** Бэкенд отдаёт camelCase (json-теги); без тегов Go шлёт PascalCase — поддерживаем оба варианта. */
+function tokensFromAuthResponse(response: unknown): AuthTokens {
+  const r = response as Record<string, string | undefined>
+  const accessToken =
+    r.accessToken ?? r.AccessToken ?? (r as { access_token?: string }).access_token
+  const refreshToken =
+    r.refreshToken ?? r.RefreshToken ?? (r as { refresh_token?: string }).refresh_token
+  if (!accessToken || !refreshToken) {
+    throw new Error('Auth response missing accessToken or refreshToken')
+  }
+  return { accessToken, refreshToken }
 }
 
 export const authApi = baseApi.injectEndpoints({
@@ -14,10 +22,7 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      transformResponse: (response: ServerTokens): AuthTokens => ({
-        accessToken: response.AccessToken,
-        refreshToken: response.RefreshToken,
-      }),
+      transformResponse: (response: unknown): AuthTokens => tokensFromAuthResponse(response),
       invalidatesTags: ['Auth'],
     }),
     signUp: build.mutation<string, SignUpRequest>({
@@ -43,10 +48,7 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      transformResponse: (response: ServerTokens): AuthTokens => ({
-        accessToken: response.AccessToken,
-        refreshToken: response.RefreshToken,
-      }),
+      transformResponse: (response: unknown): AuthTokens => tokensFromAuthResponse(response),
       invalidatesTags: ['Auth'],
     }),
   }),

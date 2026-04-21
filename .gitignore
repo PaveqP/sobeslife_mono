@@ -2,8 +2,20 @@ server/.vscode/
 .vscode
 server/.env
 .env
+*.env.local
+.env.*.local
 server/cmd/migrator/
 server/tmp
-node_modules/
+**/node_modules/
 mobile/dist/
 web/dist/
+graphify-out/cache/
+admin/dist/
+e2e/playwright-report/
+e2e/test-results/
+.DS_Store
+# Claude / AI tooling — may contain tokens or local paths
+.mcp.json
+.claude/
+.claude-flow/
+graphify-out/

@@ -82,5 +82,35 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 	}
 
+	// Admin routes — separate auth, separate user table
+	adminAuth := router.Group("/admin/auth")
+	{
+		adminAuth.POST("/sign-up", h.adminSignUp)
+		adminAuth.POST("/sign-in", h.adminSignIn)
+	}
+	adminApi := router.Group("/admin/api", h.identifyAdmin)
+	{
+		adminApi.GET("/stats", h.adminGetStats)
+		adminApi.GET("/analytics", h.adminGetAnalytics)
+		adminApi.GET("/admins", h.adminListAdmins)
+		adminApi.DELETE("/admins/:id", h.adminDeleteAdmin)
+		adminApi.GET("/users", h.adminGetUsers)
+		adminApi.POST("/users", h.adminCreateUser)
+		adminApi.PUT("/users/:id", h.adminUpdateUser)
+		adminApi.DELETE("/users/:id", h.adminDeleteUser)
+		adminApi.GET("/tests", h.adminGetTests)
+		adminApi.POST("/tests", h.adminCreateTest)
+		adminApi.DELETE("/tests/:id", h.adminDeleteTest)
+		adminApi.GET("/tests/:id/questions", h.adminGetTestQuestions)
+		adminApi.POST("/tests/:id/questions", h.adminAddQuestionToTest)
+		adminApi.DELETE("/tests/:id/questions/:questionId", h.adminRemoveQuestionFromTest)
+		adminApi.GET("/questions", h.adminGetQuestions)
+		adminApi.POST("/questions", h.adminCreateQuestion)
+		adminApi.PUT("/questions/:id", h.adminUpdateQuestion)
+		adminApi.DELETE("/questions/:id", h.adminDeleteQuestion)
+		adminApi.GET("/interviews", h.adminGetInterviews)
+		adminApi.DELETE("/interviews/:id", h.adminDeleteInterview)
+	}
+
 	return router
 }

@@ -92,3 +92,63 @@ export type CompleteTestResponse = {
     points: number | null
   }>
 }
+
+// Interview types
+export type InterviewStatus = 'in_progress' | 'completed' | 'summary_failed'
+export type InterviewMessageRole = 'assistant' | 'user'
+
+export type StartInterviewRequest = {
+  profession: string
+  interview_level: ExpertiseLevel
+  duration_minutes: number
+  candidate_specialization: string
+}
+
+export type InterviewStartResponse = {
+  id: number
+  status: InterviewStatus
+  profession_id: number
+  profession: string
+  interview_level: ExpertiseLevel
+  duration_minutes: number
+  candidate_specialization: string | null
+  started_at: string
+  expires_at: string
+  first_question: string
+}
+
+export type InterviewTurnResponse = {
+  interview_id: number
+  status: InterviewStatus
+  expires_at?: string
+  message?: {
+    sequence_no: number
+    role: InterviewMessageRole
+    content: string
+    created_at: string
+  }
+  verdict_passed?: boolean | null
+  summary?: string | null
+  strengths?: string[]
+  weaknesses?: string[]
+  recommendations?: string[]
+  finished_at?: string | null
+}
+
+export type InterviewHistoryItem = {
+  id: number
+  profession_id: number
+  profession: string
+  interview_level: ExpertiseLevel
+  status: InterviewStatus
+  duration_minutes: number
+  candidate_specialization: string | null
+  verdict_passed: boolean | null
+  summary: string | null
+  strengths: string[] | null
+  weaknesses: string[] | null
+  recommendations: string[] | null
+  started_at: string
+  expires_at: string
+  finished_at: string | null
+}

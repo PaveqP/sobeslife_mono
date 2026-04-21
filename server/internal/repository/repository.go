@@ -53,12 +53,38 @@ type Interviews interface {
 	FinalizeInterview(interviewID int, params utils.InterviewFinalizeParams) (*utils.InterviewSession, error)
 }
 
+type Admin interface {
+	CreateAdmin(name string, email string, passwordHash string) (int, error)
+	GetAdminByEmail(email string) (*utils.AdminIdentity, error)
+	ListAdmins() ([]utils.AdminListAdminItem, error)
+	DeleteAdmin(id int) error
+	GetStats() (*utils.AdminStatsResponse, error)
+	ListWebUsers() ([]utils.AdminUserListItem, error)
+	CreateWebUser(req utils.AdminCreateWebUserRequest, passwordHash string) (*utils.AdminUserListItem, error)
+	UpdateWebUser(id int, req utils.AdminUpdateWebUserRequest) (*utils.AdminUserListItem, error)
+	DeleteWebUser(userID int) error
+	ListInterviews() ([]utils.AdminInterviewListItem, error)
+	DeleteInterview(id int) error
+	GetAnalytics() (*utils.AdminAnalyticsResponse, error)
+	ListAdminTests() ([]utils.TestListItem, error)
+	CreateAdminTest(req utils.AdminCreateTestRequest) (*utils.TestListItem, error)
+	DeleteAdminTest(id int) error
+	ListTestQuestions(testID int) ([]utils.AdminTestQuestionItem, error)
+	AddQuestionToTest(testID, questionID int) error
+	RemoveQuestionFromTest(testID, questionID int) error
+	ListQuestions(filters utils.AdminQuestionFilters) ([]utils.AdminQuestionListItem, error)
+	CreateQuestion(req utils.AdminCreateQuestionRequest) (*utils.AdminQuestionListItem, error)
+	UpdateQuestion(id int, req utils.AdminUpdateQuestionRequest) (*utils.AdminQuestionListItem, error)
+	DeleteQuestion(id int) error
+}
+
 type Repository struct {
 	Authorization
 	Questions
 	Tests
 	Shared
 	Interviews
+	Admin
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
@@ -68,5 +94,6 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Tests:         newTestsRepository(db),
 		Shared:        newSharedRepository(db),
 		Interviews:    newInterviewsRepository(db),
+		Admin:         newAdminRepository(db),
 	}
 }

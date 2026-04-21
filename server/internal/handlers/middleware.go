@@ -13,7 +13,6 @@ const (
 	authorizationHeader = "Authorization"
 	correctHeaderLength = 2
 	userIdKey           = "userId"
-	isAdminKey          = "isAdmin"
 )
 
 func (h *Handler) identifyUser(c *gin.Context) {
@@ -32,21 +31,15 @@ func (h *Handler) identifyUser(c *gin.Context) {
 		return
 	}
 
-	userId, err := h.jwt.VerifyAccessToken(headerParts[1])
+	userId, err := h.jwt.VerifyWebAccessToken(headerParts[1])
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, err)
 		return
 	}
 
-	isAdmin, err := h.services.GetIsAdmin(userId)
-	if err != nil {
-		logrus.Error("Cant identify user status")
-		c.AbortWithStatusJSON(http.StatusUnauthorized, "Cant identify user status")
-		return
-	}
-
+	// Не вызываем GetIsAdmin на каждый запрос: флаг нигде в хендлерах не используется,
+	// а лишний SELECT давал 401 при любой ошибке БД / рассинхроне id.
 	c.Set(userIdKey, userId)
-	c.Set(isAdminKey, isAdmin)
 	c.Next()
 }
 

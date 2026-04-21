@@ -7,6 +7,8 @@ import { SignInScreen } from '../screens/sign-in-screen'
 import { SignUpScreen } from '../screens/sign-up-screen'
 import { TestsScreen } from '../screens/tests-screen'
 import { TestRunScreen } from '../screens/test-run-screen'
+import { InterviewsScreen } from '../screens/interviews-screen'
+import { InterviewRunScreen } from '../screens/interview-run-screen'
 import { useTheme } from '../shared/theme/theme-provider'
 import { FullScreenLoader } from '../shared/ui/surfaces'
 import type { RootStackParamList } from './navigation-types'
@@ -68,6 +70,8 @@ export const AppNavigation = () => {
               }}
             />
             <Stack.Screen name="TestRun" component={TestRunScreen} options={{ title: 'Прохождение теста' }} />
+            <Stack.Screen name="Interviews" component={InterviewsScreen} options={{ title: 'Собеседования' }} />
+            <Stack.Screen name="InterviewRun" component={InterviewRunScreen} options={{ title: 'AI-собеседование' }} />
           </>
         )}
       </Stack.Navigator>
