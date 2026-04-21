@@ -130,8 +130,9 @@ func ResolveDir() string {
 	return "migrations"
 }
 
-// ensureGolangMigrateSchemaMigrationsTable приводит legacy-таблицу schema_migrations к формату golang-migrate v4
-// (нужны колонки version + dirty). Иначе m.Version() падает с «column dirty does not exist», app не стартует → 502.
+// ensureGolangMigrateSchemaMigrationsTable приводит legacy-таблицу schema_migrations к формату golang-migrate v4:
+// только колонки version (bigint PK) и dirty (bool). Другие инструменты часто добавляют name NOT NULL —
+// тогда INSERT (version, dirty) падает с «null value in column name».
 func ensureGolangMigrateSchemaMigrationsTable(dsn string) error {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -140,6 +141,8 @@ func ensureGolangMigrateSchemaMigrationsTable(dsn string) error {
 	defer db.Close()
 
 	const q = `
+ALTER TABLE IF EXISTS public.schema_migrations
+	DROP COLUMN IF EXISTS name;
 ALTER TABLE IF EXISTS public.schema_migrations
 	ADD COLUMN IF NOT EXISTS dirty boolean NOT NULL DEFAULT false`
 	if _, err := db.Exec(q); err != nil {
