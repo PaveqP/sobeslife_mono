@@ -61,8 +61,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: admin/package-lock.json
       - run: npm install
-      - name: Rolldown Linux binding for Vitest/Vite 8
-        run: npm install "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")"
+      - name: Native bindings for Linux (Rolldown + Lightning CSS)
+        run: |
+          npm install \
+            "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")" \
+            "lightningcss-linux-x64-gnu@$(node -p "require('./node_modules/lightningcss/package.json').version")"
       - run: npm run typecheck
       - run: npm test
 
@@ -123,8 +126,12 @@ jobs:
       - name: Install admin dependencies
         run: npm install
         working-directory: admin
-      - name: Rolldown Linux binding for Vitest/Vite 8
-        run: npm install "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")"
+      # Lockfile с macOS не подтягивает optional native deps для Linux (rolldown, lightningcss/Tailwind 4)
+      - name: Native bindings for Linux (Rolldown + Lightning CSS)
+        run: |
+          npm install \
+            "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")" \
+            "lightningcss-linux-x64-gnu@$(node -p "require('./node_modules/lightningcss/package.json').version")"
         working-directory: admin
       - name: Build admin app
         run: npm run build

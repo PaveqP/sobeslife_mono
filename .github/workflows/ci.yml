@@ -37,10 +37,13 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: admin/package-lock.json
-      # npm optional deps: lockfile с macOS не всегда ставит @rolldown/binding-linux-x64-gnu на Linux.
+      # npm optional deps: lockfile с macOS не всегда ставит нативные пакеты для Linux (rolldown, lightningcss).
       - run: npm install
-      - name: Rolldown Linux binding for Vitest/Vite 8
-        run: npm install "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")"
+      - name: Native bindings for Linux (Rolldown + Lightning CSS)
+        run: |
+          npm install \
+            "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")" \
+            "lightningcss-linux-x64-gnu@$(node -p "require('./node_modules/lightningcss/package.json').version")"
       - run: npm run typecheck
       - run: npm test
 
