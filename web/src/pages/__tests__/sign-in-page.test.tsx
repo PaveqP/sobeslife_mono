@@ -24,18 +24,17 @@ vi.mock('@/shared/theme/theme-provider', () => ({
   ThemeToggle: () => <button aria-label="toggle theme">Theme</button>,
 }))
 
-const makeStore = (preloadedState?: Record<string, unknown>) =>
+const makeStore = () =>
   configureStore({
     reducer: {
       auth: authReducer,
       [baseApi.reducerPath]: baseApi.reducer,
     },
-    middleware: (getDefault) => getDefault().concat(baseApi.middleware),
-    preloadedState,
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware),
   })
 
-function renderSignInPage(storeOverrides?: Record<string, unknown>) {
-  const store = makeStore(storeOverrides)
+function renderSignInPage() {
+  const store = makeStore()
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={['/sign-in']}>
