@@ -119,6 +119,20 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: admin/package-lock.json
+      - name: Install admin dependencies
+        run: npm install
+        working-directory: admin
+      - name: Rolldown Linux binding for Vitest/Vite 8
+        run: npm install "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")"
+        working-directory: admin
+      - name: Build admin app
+        run: npm run build
+        working-directory: admin
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
           cache-dependency-path: e2e/package-lock.json
       - name: Install e2e dependencies
         run: npm ci
@@ -126,11 +140,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: e2e
-      - name: Serve web build and run Playwright tests
+      - name: Serve web and admin builds and run Playwright tests
         run: |
-          npx serve ../web/dist -l 5173 &
-          sleep 3
-          BASE_URL=http://localhost:5173 npx playwright test --project=chromium
+          # -s: SPA fallback to index.html (otherwise /sign-in, /analytics return 404)
+          npx serve ../web/dist -s -l 5173 &
+          npx serve ../admin/dist -s -l 5174 &
+          sleep 5
+          BASE_URL=http://localhost:5173 ADMIN_BASE_URL=http://localhost:5174 npx playwright test --project=chromium
         working-directory: e2e
 
   deploy:

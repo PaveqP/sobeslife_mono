@@ -111,6 +111,7 @@ export const SignInPage = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <Input
               label="Номер телефона"
+              type="tel"
               placeholder="+7 999 123-45-67"
               value={formState.phone_number}
               onChange={(event) =>
