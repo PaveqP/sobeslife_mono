@@ -35,9 +35,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # npm ci uses the macOS-generated lockfile which lacks linux-x64 rolldown bindings.
-      # npm install resolves platform-specific optional deps for the current runner OS.
+          cache: 'npm'
+          cache-dependency-path: admin/package-lock.json
+      # npm optional deps: lockfile с macOS не всегда ставит @rolldown/binding-linux-x64-gnu на Linux.
       - run: npm install
+      - name: Rolldown Linux binding for Vitest/Vite 8
+        run: npm install "@rolldown/binding-linux-x64-gnu@$(node -p "require('./node_modules/rolldown/package.json').version")"
       - run: npm run typecheck
       - run: npm test
 
