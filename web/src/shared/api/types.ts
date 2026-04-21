@@ -2,6 +2,36 @@ export type ExpertiseLevel = 'trainee' | 'junior' | 'middle' | 'senior'
 export type TestStatus = 'assigned' | 'in_progress' | 'completed' | 'expired' | 'cancelled'
 export type InterviewStatus = 'in_progress' | 'completed' | 'summary_failed'
 
+// Auth
+
+export interface AuthTokens {
+  accessToken: string
+  refreshToken: string
+}
+
+export interface SignInRequest {
+  phone_number: string
+  password: string
+}
+
+export interface SignUpRequest {
+  email?: string
+  phone_number?: string
+  password: string
+  nickname?: string
+}
+
+export interface GoogleAuthUrlRequest {
+  state: string
+  codeChallenge: string
+}
+
+export interface GoogleAuthCallbackRequest {
+  code: string
+  code_verifier: string
+  state?: string
+}
+
 // Lookups
 
 export interface NamedEntity {
