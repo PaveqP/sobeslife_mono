@@ -337,6 +337,7 @@ location / {
 
 | Симптом | Что проверить |
 |---------|----------------|
+| **502 на всём сайте** по HTTPS (`nginx/1.24` на Ubuntu внизу страницы) | Это **хостовый** nginx. Он должен `proxy_pass` на тот **порт хоста**, куда проброшен контейнер `web` (в `.env`: `HTTP_PORT`, по умолчанию `80`). Если на 80 уже слушает этот nginx, в `.env` задайте `HTTP_PORT=8080` и в `server { ... }` укажите `proxy_pass http://127.0.0.1:8080;`. Проверка: `docker compose ... ps` (у `web` и `app` — Up), `curl -sI http://127.0.0.1:ВАШ_ПОРТ/` |
 | 502 / пустой ответ от `/api` | `docker compose ... logs app`; контейнер `app` — `Up`; проверка `exec web wget http://app:8080/health` (см. B4) |
 | После `git pull` в CI: `dubious ownership` | На сервере один раз: `git config --global --add safe.directory /opt/sobeslife` (workflow уже добавляет `safe.directory` для текущего пути) |
 | Actions не подключается по SSH | Секреты, `authorized_keys`, пользователь, что ключ не с переносами обрезан |
