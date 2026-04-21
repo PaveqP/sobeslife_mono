@@ -363,6 +363,7 @@ location / {
 | **502 на POST** (`/auth/sign-in`, `/api/...`) при живом `GET /` | Часто: **`app` не отвечает вовремя** (БД/Redis) или **обрыв** из‑за таймаутов. Проверьте `docker logs …-app-1`; с хоста: `curl -sS -X POST http://127.0.0.1:ВАШ_HTTP_PORT/auth/sign-in -H 'Content-Type: application/json' -d '{}'`. На хостовом nginx задайте **`proxy_read_timeout` / `proxy_send_timeout`** (например 60s) для `location /` и при необходимости увеличьте таймауты в образе **`web`** (см. `web/nginx.conf`) и в **Go** (`server/internal/server/server.go`). |
 | После `git pull` в CI: `dubious ownership` | На сервере один раз: `git config --global --add safe.directory /opt/sobeslife` (workflow уже добавляет `safe.directory` для текущего пути) |
 | Actions не подключается по SSH | Секреты, `authorized_keys`, пользователь, что ключ не с переносами обрезан |
+| **`column "dirty" does not exist`** в `schema_migrations` | Таблица в старом формате. В новых версиях приложение само добавляет колонку при старте; либо один раз вручную: `docker compose ... exec db psql -U postgres -d postgres -c 'ALTER TABLE IF EXISTS public.schema_migrations ADD COLUMN IF NOT EXISTS dirty boolean NOT NULL DEFAULT false;'` |
 | Фронт стучит не туда | Для deploy не задавайте полный URL API в `.env`; `VITE_API_URL` пустой = same origin |
 | Порт 80 занят | `HTTP_PORT=8080` в `.env` + прокси с хоста или освободить 80 |
 

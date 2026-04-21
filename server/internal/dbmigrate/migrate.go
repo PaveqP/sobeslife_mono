@@ -1,6 +1,7 @@
 package dbmigrate
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 
 	"sobeslife-services/internal/repository"
@@ -23,6 +25,10 @@ import (
 func Run(cfg repository.Config, migrationsDir string) error {
 	password := utils.GetEnv("DB_PASSWORD")
 	dsn := postgresDSN(cfg, password)
+
+	if err := ensureGolangMigrateSchemaMigrationsTable(dsn); err != nil {
+		return err
+	}
 
 	abs, err := filepath.Abs(migrationsDir)
 	if err != nil {
@@ -122,4 +128,22 @@ func ResolveDir() string {
 		return p
 	}
 	return "migrations"
+}
+
+// ensureGolangMigrateSchemaMigrationsTable приводит legacy-таблицу schema_migrations к формату golang-migrate v4
+// (нужны колонки version + dirty). Иначе m.Version() падает с «column dirty does not exist», app не стартует → 502.
+func ensureGolangMigrateSchemaMigrationsTable(dsn string) error {
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return fmt.Errorf("compat schema_migrations: open db: %w", err)
+	}
+	defer db.Close()
+
+	const q = `
+ALTER TABLE IF EXISTS public.schema_migrations
+	ADD COLUMN IF NOT EXISTS dirty boolean NOT NULL DEFAULT false`
+	if _, err := db.Exec(q); err != nil {
+		return fmt.Errorf("compat schema_migrations: %w", err)
+	}
+	return nil
 }
