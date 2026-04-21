@@ -66,9 +66,9 @@ const QuestionAnswerInput = ({
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium text-text-secondary">Выберите один ответ</p>
-        {question.options.map((option) => (
+        {question.options.map((option, i) => (
           <label
-            key={option}
+            key={i}
             className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition ${
               answer === option
                 ? 'border-accent bg-accent-soft'
@@ -81,6 +81,7 @@ const QuestionAnswerInput = ({
               value={option}
               checked={answer === option}
               onChange={() => onAnswerChange(option)}
+              onClick={(e) => e.stopPropagation()}
               className="accent-accent"
             />
             <span className="text-sm text-text-primary">{option}</span>
@@ -95,9 +96,9 @@ const QuestionAnswerInput = ({
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium text-text-secondary">Выберите все подходящие варианты</p>
-        {question.options.map((option) => (
+        {question.options.map((option, i) => (
           <label
-            key={option}
+            key={i}
             className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition ${
               selected.includes(option)
                 ? 'border-accent bg-accent-soft'
@@ -109,6 +110,7 @@ const QuestionAnswerInput = ({
               value={option}
               checked={selected.includes(option)}
               onChange={() => onToggleOption(option)}
+              onClick={(e) => e.stopPropagation()}
               className="accent-accent"
             />
             <span className="text-sm text-text-primary">{option}</span>
@@ -144,6 +146,14 @@ const TestRunContent = ({
   )
   const [answerStatus, setAnswerStatus] = useState<Record<number, boolean | null>>(() =>
     Object.fromEntries(data.questions.map((question) => [question.id, question.is_correct ?? null])),
+  )
+  // Freeze options on mount — prevent refetch from reshuffling them
+  const [stableOptions] = useState<Record<number, string[]>>(() =>
+    Object.fromEntries(
+      data.questions
+        .filter((q) => q.options && q.options.length > 0)
+        .map((q) => [q.id, q.options!]),
+    ),
   )
   const [completedResult, setCompletedResult] = useState<CompleteTestResponse | null>(null)
   const startRequestedRef = useRef(false)
@@ -298,7 +308,7 @@ const TestRunContent = ({
             </div>
 
             <QuestionAnswerInput
-              question={currentQuestion}
+              question={{ ...currentQuestion, options: stableOptions[currentQuestion.id] ?? currentQuestion.options }}
               answer={answers[currentQuestion.id] ?? ''}
               onAnswerChange={(value) =>
                 setAnswers((currentState) => ({ ...currentState, [currentQuestion.id]: value }))
@@ -359,7 +369,7 @@ const TestRunContent = ({
                   {completedResult.questions.map((question) => (
                     <div
                       key={question.question_id}
-                      className="rounded-2xl border border-success/10 bg-white/70 p-4 text-sm text-slate-700"
+                      className="rounded-2xl border border-border-subtle bg-surface p-4 text-sm"
                     >
                       <p className="font-semibold text-text-primary">{question.text}</p>
                       <p className="mt-2 text-text-secondary">Ваш ответ: {question.user_answer ?? 'Нет ответа'}</p>

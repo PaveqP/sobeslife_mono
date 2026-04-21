@@ -191,11 +191,12 @@ func (tr *TestsRepository) buildOptions(questionID int, professionID int, chapte
 			AND chapter_id = $3
 			AND correct_answer IS NOT NULL
 			AND correct_answer != ''
+			AND correct_answer != $4
 		ORDER BY RANDOM()
 		LIMIT 3
 	`
 	var wrongAnswers []string
-	if err := tr.db.Select(&wrongAnswers, wrongQuery, questionID, professionID, chapterID); err != nil {
+	if err := tr.db.Select(&wrongAnswers, wrongQuery, questionID, professionID, chapterID, correctAnswer); err != nil {
 		wrongAnswers = []string{}
 	}
 
