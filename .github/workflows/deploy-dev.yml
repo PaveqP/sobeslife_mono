@@ -149,10 +149,11 @@ jobs:
         working-directory: e2e
       - name: Serve web and admin builds and run Playwright tests
         run: |
-          # -s: SPA fallback to index.html (otherwise /sign-in, /analytics return 404)
+          # Web: static SPA (base "/"). Admin: base "/admin/" — assets are /admin/assets/* on disk under dist/assets/;
+          # plain "serve" maps URLs wrong and returns 404 for JS. Vite preview respects base.
           npx serve ../web/dist -s -l 5173 &
-          npx serve ../admin/dist -s -l 5174 &
-          sleep 5
+          (cd ../admin && npm run preview -- --port 5174 --host 127.0.0.1) &
+          sleep 6
           BASE_URL=http://localhost:5173 ADMIN_BASE_URL=http://localhost:5174 npx playwright test --project=chromium
         working-directory: e2e
 
