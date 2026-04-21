@@ -423,7 +423,7 @@ func (r *AdminRepository) DeleteAdminTest(id int) error {
 func (r *AdminRepository) ListTestQuestions(testID int) ([]utils.AdminTestQuestionItem, error) {
 	query := `
 		SELECT tq.id AS test_question_id, tq.question_id,
-			q.text, q.correct_answer, q.expertise_level::text
+			q.text, q.correct_answer, q.question_type, q.expertise_level::text
 		FROM test_question tq
 		JOIN question q ON q.id = tq.question_id
 		WHERE tq.test_id = $1
@@ -450,7 +450,7 @@ func (r *AdminRepository) RemoveQuestionFromTest(testID, questionID int) error {
 
 func (r *AdminRepository) ListQuestions(filters utils.AdminQuestionFilters) ([]utils.AdminQuestionListItem, error) {
 	query := `
-		SELECT q.id, q.text, q.correct_answer,
+		SELECT q.id, q.text, q.correct_answer, q.question_type,
 			p.name AS profession, c.name AS chapter,
 			t.name AS technology, q.expertise_level::text
 		FROM question q
@@ -462,13 +462,18 @@ func (r *AdminRepository) ListQuestions(filters utils.AdminQuestionFilters) ([]u
 	args := []interface{}{}
 	idx := 1
 	if filters.Profession != "" {
-		conds = append(conds, fmt.Sprintf("lower(p.name) = lower($%d)", idx))
-		args = append(args, filters.Profession)
+		conds = append(conds, fmt.Sprintf("p.name ILIKE $%d", idx))
+		args = append(args, "%"+filters.Profession+"%")
 		idx++
 	}
 	if filters.Chapter != "" {
-		conds = append(conds, fmt.Sprintf("lower(c.name) = lower($%d)", idx))
-		args = append(args, filters.Chapter)
+		conds = append(conds, fmt.Sprintf("c.name ILIKE $%d", idx))
+		args = append(args, "%"+filters.Chapter+"%")
+		idx++
+	}
+	if filters.Technology != "" {
+		conds = append(conds, fmt.Sprintf("t.name ILIKE $%d", idx))
+		args = append(args, "%"+filters.Technology+"%")
 		idx++
 	}
 	if filters.ExpertiseLevel != "" {
@@ -504,10 +509,15 @@ func (r *AdminRepository) CreateQuestion(req utils.AdminCreateQuestionRequest) (
 		}
 	}
 
+	questionType := req.QuestionType
+	if questionType == "" {
+		questionType = "open"
+	}
+
 	var id int
 	err := r.db.QueryRow(
-		"INSERT INTO question (text, correct_answer, profession_id, chapter_id, technology_id, expertise_level) VALUES ($1, $2, $3, $4, $5, $6::expertise_level) RETURNING id",
-		req.Text, req.CorrectAnswer, professionID, chapterID, technologyID, req.ExpertiseLevel,
+		"INSERT INTO question (text, correct_answer, question_type, profession_id, chapter_id, technology_id, expertise_level) VALUES ($1, $2, $3, $4, $5, $6, $7::expertise_level) RETURNING id",
+		req.Text, req.CorrectAnswer, questionType, professionID, chapterID, technologyID, req.ExpertiseLevel,
 	).Scan(&id)
 	if err != nil {
 		return nil, err
@@ -525,6 +535,9 @@ func (r *AdminRepository) UpdateQuestion(id int, req utils.AdminUpdateQuestionRe
 	}
 	if req.CorrectAnswer != nil {
 		sets = append(sets, fmt.Sprintf("correct_answer = $%d", idx)); args = append(args, req.CorrectAnswer); idx++
+	}
+	if req.QuestionType != nil && *req.QuestionType != "" {
+		sets = append(sets, fmt.Sprintf("question_type = $%d", idx)); args = append(args, req.QuestionType); idx++
 	}
 	if req.Profession != nil && *req.Profession != "" {
 		var pid int
@@ -560,7 +573,7 @@ func (r *AdminRepository) DeleteQuestion(id int) error {
 func (r *AdminRepository) getQuestionByID(id int) (*utils.AdminQuestionListItem, error) {
 	var item utils.AdminQuestionListItem
 	err := r.db.Get(&item, `
-		SELECT q.id, q.text, q.correct_answer,
+		SELECT q.id, q.text, q.correct_answer, q.question_type,
 			p.name AS profession, c.name AS chapter,
 			t.name AS technology, q.expertise_level::text
 		FROM question q

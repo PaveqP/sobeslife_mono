@@ -12,10 +12,16 @@ import { Button } from '@/shared/ui/button'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
 
 const EXPERTISE_LEVELS = ['trainee', 'junior', 'middle', 'senior']
+const QUESTION_TYPES = [
+  { value: 'open', label: 'Открытый (текст)' },
+  { value: 'single_choice', label: 'Одиночный выбор' },
+  { value: 'multiple_choice', label: 'Множественный выбор' },
+]
 
 type FormData = {
   text: string
   correct_answer: string
+  question_type: string
   profession: string
   chapter: string
   technology: string
@@ -39,6 +45,7 @@ function QuestionDialog({
     initial ?? {
       text: '',
       correct_answer: '',
+      question_type: 'open',
       profession: '',
       chapter: '',
       technology: '',
@@ -68,6 +75,16 @@ function QuestionDialog({
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Тип вопроса</label>
+            <select
+              className="w-full rounded-lg border border-border-subtle bg-page px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              value={form.question_type}
+              onChange={(e) => set('question_type', e.target.value)}
+            >
+              {QUESTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">Вопрос</label>
             <textarea
               className="w-full rounded-lg border border-border-subtle bg-page px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
@@ -78,14 +95,30 @@ function QuestionDialog({
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">Правильный ответ</label>
-            <textarea
-              className="w-full rounded-lg border border-border-subtle bg-page px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-              rows={3}
-              value={form.correct_answer}
-              onChange={(e) => set('correct_answer', e.target.value)}
-              required
-            />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              {form.question_type === 'open' ? 'Правильный ответ' : 'Правильный вариант ответа'}
+            </label>
+            {form.question_type === 'open' ? (
+              <textarea
+                className="w-full rounded-lg border border-border-subtle bg-page px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                rows={3}
+                value={form.correct_answer}
+                onChange={(e) => set('correct_answer', e.target.value)}
+                required
+              />
+            ) : (
+              <>
+                <input
+                  className="w-full rounded-lg border border-border-subtle bg-page px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  value={form.correct_answer}
+                  onChange={(e) => set('correct_answer', e.target.value)}
+                  required
+                />
+                <p className="mt-1 text-xs text-text-tertiary">
+                  Три неверных варианта подбираются автоматически из вопросов той же профессии и модуля.
+                </p>
+              </>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -129,7 +162,7 @@ function QuestionDialog({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export const QuestionsPage = () => {
-  const [filters, setFilters] = useState({ profession: '', chapter: '', expertise_level: '' })
+  const [filters, setFilters] = useState({ profession: '', chapter: '', technology: '', expertise_level: '' })
   const activeFilters = Object.fromEntries(
     Object.entries(filters).filter(([, v]) => v !== ''),
   ) as AdminQuestionFilters
@@ -148,6 +181,7 @@ export const QuestionsPage = () => {
     await createQuestion({
       text: data.text,
       correct_answer: data.correct_answer,
+      question_type: data.question_type,
       profession: data.profession,
       chapter: data.chapter,
       technology: data.technology || null,
@@ -162,6 +196,7 @@ export const QuestionsPage = () => {
       body: {
         text: data.text,
         correct_answer: data.correct_answer,
+        question_type: data.question_type,
         profession: data.profession,
         chapter: data.chapter,
         technology: data.technology || null,
@@ -200,6 +235,7 @@ export const QuestionsPage = () => {
         {[
           { key: 'profession', placeholder: 'Профессия' },
           { key: 'chapter', placeholder: 'Модуль' },
+          { key: 'technology', placeholder: 'Технология' },
         ].map(({ key, placeholder }) => (
           <input
             key={key}
@@ -217,10 +253,10 @@ export const QuestionsPage = () => {
           <option value="">Все уровни</option>
           {EXPERTISE_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
-        {(filters.profession || filters.chapter || filters.expertise_level) && (
+        {(filters.profession || filters.chapter || filters.technology || filters.expertise_level) && (
           <button
             className="text-sm text-text-secondary hover:text-text-primary underline"
-            onClick={() => setFilters({ profession: '', chapter: '', expertise_level: '' })}
+            onClick={() => setFilters({ profession: '', chapter: '', technology: '', expertise_level: '' })}
           >
             Сбросить
           </button>
@@ -239,6 +275,7 @@ export const QuestionsPage = () => {
             <tr>
               <TableHeader>ID</TableHeader>
               <TableHeader>Вопрос</TableHeader>
+              <TableHeader>Тип</TableHeader>
               <TableHeader>Профессия</TableHeader>
               <TableHeader>Модуль</TableHeader>
               <TableHeader>Технология</TableHeader>
@@ -252,6 +289,11 @@ export const QuestionsPage = () => {
                 <TableCell className="text-text-tertiary">{q.id}</TableCell>
                 <TableCell className="max-w-xs">
                   <p className="truncate font-medium text-text-primary" title={q.text}>{q.text}</p>
+                </TableCell>
+                <TableCell>
+                  <Badge tone={q.question_type === 'open' ? 'neutral' : 'accent'}>
+                    {q.question_type === 'open' ? 'открытый' : q.question_type === 'single_choice' ? 'один вариант' : 'несколько'}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-text-secondary">{q.profession}</TableCell>
                 <TableCell className="text-text-secondary">{q.chapter}</TableCell>
@@ -296,6 +338,7 @@ export const QuestionsPage = () => {
           initial={{
             text: editingQuestion.text,
             correct_answer: editingQuestion.correct_answer,
+            question_type: editingQuestion.question_type,
             profession: editingQuestion.profession,
             chapter: editingQuestion.chapter,
             technology: editingQuestion.technology ?? '',

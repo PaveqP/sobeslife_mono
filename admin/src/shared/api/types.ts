@@ -74,10 +74,13 @@ export type InterviewListItem = {
   finished_at: string | null
 }
 
+export type QuestionType = 'open' | 'single_choice' | 'multiple_choice'
+
 export type AdminQuestion = {
   id: number
   text: string
   correct_answer: string
+  question_type: QuestionType
   profession: string
   chapter: string
   technology: string | null
@@ -87,12 +90,14 @@ export type AdminQuestion = {
 export type AdminQuestionFilters = {
   profession?: string
   chapter?: string
+  technology?: string
   expertise_level?: string
 }
 
 export type CreateQuestionRequest = {
   text: string
   correct_answer: string
+  question_type: string
   profession: string
   chapter: string
   technology?: string | null
@@ -102,6 +107,7 @@ export type CreateQuestionRequest = {
 export type UpdateQuestionRequest = {
   text?: string | null
   correct_answer?: string | null
+  question_type?: string | null
   profession?: string | null
   chapter?: string | null
   technology?: string | null
@@ -113,6 +119,7 @@ export type AdminTestQuestion = {
   question_id: number
   text: string
   correct_answer: string
+  question_type: QuestionType
   expertise_level: ExpertiseLevel
 }
 

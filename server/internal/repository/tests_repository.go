@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"math/rand"
 	"sobeslife-services/internal/utils"
 	"strings"
 
@@ -133,9 +134,12 @@ func (tr *TestsRepository) GetByID(user_id string, test_id string) (*utils.TestD
 	) ut ON true
 	WHERE t.id = $1`
 
-	getQuestionsQuery := `SELECT 
+	getQuestionsQuery := `SELECT
 		q.id,
 		q.text,
+		q.question_type,
+		q.profession_id,
+		q.chapter_id,
 		tq.answer AS user_answer,
 		tq.is_correct
 	FROM test_question tq
@@ -148,14 +152,58 @@ func (tr *TestsRepository) GetByID(user_id string, test_id string) (*utils.TestD
 		return nil, err
 	}
 
-	var questions []utils.TestQuestionDetails
-	if err := tr.db.Select(&questions, getQuestionsQuery, test_id); err != nil {
+	var rows []utils.TestQuestionRow
+	if err := tr.db.Select(&rows, getQuestionsQuery, test_id); err != nil {
 		return nil, err
+	}
+
+	questions := make([]utils.TestQuestionDetails, 0, len(rows))
+	for _, row := range rows {
+		q := utils.TestQuestionDetails{
+			ID:           row.ID,
+			Text:         row.Text,
+			QuestionType: row.QuestionType,
+			UserAnswer:   row.UserAnswer,
+			IsCorrect:    row.IsCorrect,
+		}
+		if row.QuestionType == "single_choice" || row.QuestionType == "multiple_choice" {
+			q.Options = tr.buildOptions(row.ID, row.ProfessionID, row.ChapterID)
+		}
+		questions = append(questions, q)
 	}
 
 	testDetails.Questions = questions
 
 	return &testDetails, nil
+}
+
+func (tr *TestsRepository) buildOptions(questionID int, professionID int, chapterID int) []string {
+	correctQuery := "SELECT correct_answer FROM question WHERE id = $1"
+	var correctAnswer string
+	if err := tr.db.Get(&correctAnswer, correctQuery, questionID); err != nil {
+		return nil
+	}
+
+	wrongQuery := `
+		SELECT correct_answer FROM question
+		WHERE id != $1
+			AND profession_id = $2
+			AND chapter_id = $3
+			AND correct_answer IS NOT NULL
+			AND correct_answer != ''
+		ORDER BY RANDOM()
+		LIMIT 3
+	`
+	var wrongAnswers []string
+	if err := tr.db.Select(&wrongAnswers, wrongQuery, questionID, professionID, chapterID); err != nil {
+		wrongAnswers = []string{}
+	}
+
+	options := append([]string{correctAnswer}, wrongAnswers...)
+	rand.Shuffle(len(options), func(i, j int) {
+		options[i], options[j] = options[j], options[i]
+	})
+	return options
 }
 
 func (tr *TestsRepository) GetStatistics(user_id string) (*utils.UserTestsStatisticsResponse, error) {

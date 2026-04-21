@@ -7,7 +7,7 @@ import {
   useGetTestByIdQuery,
   useStartTestMutation,
 } from '@/shared/api/tests-api'
-import type { CompleteTestResponse, TestDetails } from '@/shared/api/types'
+import type { CompleteTestResponse, TestDetails, TestQuestionDetails } from '@/shared/api/types'
 import { Button } from '@/shared/ui/button'
 import { Textarea } from '@/shared/ui/form-controls'
 import { Badge, Card, EmptyState, Skeleton } from '@/shared/ui/surfaces'
@@ -51,6 +51,84 @@ export const TestRunPage = () => {
   return <TestRunContent key={data.id} data={data} isFetching={isFetching} testId={testId} />
 }
 
+const QuestionAnswerInput = ({
+  question,
+  answer,
+  onAnswerChange,
+  onToggleOption,
+}: {
+  question: TestQuestionDetails
+  answer: string
+  onAnswerChange: (value: string) => void
+  onToggleOption: (option: string) => void
+}) => {
+  if (question.question_type === 'single_choice' && question.options) {
+    return (
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-text-secondary">Выберите один ответ</p>
+        {question.options.map((option) => (
+          <label
+            key={option}
+            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition ${
+              answer === option
+                ? 'border-accent bg-accent-soft'
+                : 'border-border-subtle bg-surface hover:border-border-strong'
+            }`}
+          >
+            <input
+              type="radio"
+              name={`question-${question.id}`}
+              value={option}
+              checked={answer === option}
+              onChange={() => onAnswerChange(option)}
+              className="accent-accent"
+            />
+            <span className="text-sm text-text-primary">{option}</span>
+          </label>
+        ))}
+      </div>
+    )
+  }
+
+  if (question.question_type === 'multiple_choice' && question.options) {
+    const selected = answer.split(',').filter(Boolean)
+    return (
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-text-secondary">Выберите все подходящие варианты</p>
+        {question.options.map((option) => (
+          <label
+            key={option}
+            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition ${
+              selected.includes(option)
+                ? 'border-accent bg-accent-soft'
+                : 'border-border-subtle bg-surface hover:border-border-strong'
+            }`}
+          >
+            <input
+              type="checkbox"
+              value={option}
+              checked={selected.includes(option)}
+              onChange={() => onToggleOption(option)}
+              className="accent-accent"
+            />
+            <span className="text-sm text-text-primary">{option}</span>
+          </label>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <Textarea
+      label="Ваш ответ"
+      placeholder="Напишите развернутый ответ"
+      value={answer}
+      onChange={(event) => onAnswerChange(event.target.value)}
+      hint="Ответ можно редактировать и отправлять повторно."
+    />
+  )
+}
+
 const TestRunContent = ({
   data,
   isFetching,
@@ -83,12 +161,17 @@ const TestRunContent = ({
 
   const completionSummary = useMemo(() => {
     const answered = data.questions.filter((question) => (answers[question.id] ?? '').trim()).length
-
-    return {
-      answered,
-      total: data.questions.length,
-    }
+    return { answered, total: data.questions.length }
   }, [answers, data.questions])
+
+  const toggleMultipleChoice = (questionId: number, option: string) => {
+    setAnswers((current) => {
+      const existing = (current[questionId] ?? '').split(',').filter(Boolean)
+      const idx = existing.indexOf(option)
+      const next = idx >= 0 ? existing.filter((o) => o !== option) : [...existing, option]
+      return { ...current, [questionId]: next.sort().join(',') }
+    })
+  }
 
   const currentQuestion = data.questions[currentQuestionIndex]
 
@@ -214,17 +297,13 @@ const TestRunContent = ({
               </Badge>
             </div>
 
-            <Textarea
-              label="Ваш ответ"
-              placeholder="Напишите развернутый ответ"
-              value={answers[currentQuestion.id] ?? ''}
-              onChange={(event) =>
-                setAnswers((currentState) => ({
-                  ...currentState,
-                  [currentQuestion.id]: event.target.value,
-                }))
+            <QuestionAnswerInput
+              question={currentQuestion}
+              answer={answers[currentQuestion.id] ?? ''}
+              onAnswerChange={(value) =>
+                setAnswers((currentState) => ({ ...currentState, [currentQuestion.id]: value }))
               }
-              hint="Ответ можно редактировать и отправлять повторно."
+              onToggleOption={(option) => toggleMultipleChoice(currentQuestion.id, option)}
             />
 
             <div className="flex flex-wrap items-center justify-between gap-3">

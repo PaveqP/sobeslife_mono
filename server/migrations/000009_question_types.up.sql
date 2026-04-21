@@ -1,0 +1,1 @@
+ALTER TABLE question ADD COLUMN IF NOT EXISTS question_type VARCHAR(20) NOT NULL DEFAULT 'open';

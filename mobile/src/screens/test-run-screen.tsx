@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useCheckAnswerMutation, useCompleteTestMutation, useGetTestByIdQuery, useStartTestMutation } from '../shared/api/tests-api'
-import type { CompleteTestResponse, TestDetails } from '../shared/api/types'
+import type { CompleteTestResponse, TestDetails, TestQuestion } from '../shared/api/types'
 import type { AppScreenProps } from '../app/navigation-types'
 import { AppButton } from '../shared/ui/button'
 import { AppTextInput } from '../shared/ui/form-controls'
@@ -27,6 +27,94 @@ export const TestRunScreen = ({ route }: AppScreenProps<'TestRun'>) => {
 
   return <TestRunContent data={data} isFetching={isFetching} testId={testId} />
 }
+
+const QuestionAnswerInput = ({
+  question,
+  answer,
+  onAnswerChange,
+  onToggleOption,
+  theme,
+}: {
+  question: TestQuestion
+  answer: string
+  onAnswerChange: (value: string) => void
+  onToggleOption: (option: string) => void
+  theme: ReturnType<typeof useTheme>['theme']
+}) => {
+  if ((question.question_type === 'single_choice' || question.question_type === 'multiple_choice') && question.options) {
+    const isMultiple = question.question_type === 'multiple_choice'
+    const selected = isMultiple ? answer.split(',').filter(Boolean) : [answer]
+    const label = isMultiple ? 'Выберите все подходящие варианты' : 'Выберите один ответ'
+
+    return (
+      <View style={{ gap: 8, marginTop: 8 }}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: theme.colors.textSecondary }}>{label}</Text>
+        {question.options.map((option) => {
+          const isSelected = selected.includes(option)
+          return (
+            <Pressable
+              key={option}
+              onPress={() => isMultiple ? onToggleOption(option) : onAnswerChange(option)}
+              style={[
+                choiceStyles.option,
+                {
+                  borderColor: isSelected ? theme.colors.accent : theme.colors.borderSubtle,
+                  backgroundColor: isSelected ? theme.colors.accentSoft : theme.colors.surface,
+                },
+              ]}
+            >
+              <View style={[
+                choiceStyles.indicator,
+                isMultiple ? choiceStyles.checkbox : choiceStyles.radio,
+                {
+                  borderColor: isSelected ? theme.colors.accent : theme.colors.borderSubtle,
+                  backgroundColor: isSelected ? theme.colors.accent : 'transparent',
+                },
+              ]} />
+              <Text style={{ fontSize: 14, color: theme.colors.textPrimary, flex: 1 }}>{option}</Text>
+            </Pressable>
+          )
+        })}
+      </View>
+    )
+  }
+
+  return (
+    <AppTextInput
+      label="Ваш ответ"
+      placeholder="Напишите развернутый ответ"
+      multiline
+      numberOfLines={6}
+      value={answer}
+      onChangeText={onAnswerChange}
+      hint="Ответ можно править и отправлять повторно."
+      containerStyle={{ marginTop: 8 }}
+    />
+  )
+}
+
+const choiceStyles = StyleSheet.create({
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  indicator: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+  },
+  radio: {
+    borderRadius: 9,
+  },
+  checkbox: {
+    borderRadius: 4,
+  },
+})
 
 const TestRunContent = ({
   data,
@@ -65,6 +153,15 @@ const TestRunContent = ({
     const answered = data.questions.filter((question) => (answers[question.id] ?? '').trim()).length
     return { answered, total: data.questions.length }
   }, [answers, data.questions])
+
+  const toggleMultipleChoice = (questionId: number, option: string) => {
+    setAnswers((current) => {
+      const existing = (current[questionId] ?? '').split(',').filter(Boolean)
+      const idx = existing.indexOf(option)
+      const next = idx >= 0 ? existing.filter((o) => o !== option) : [...existing, option]
+      return { ...current, [questionId]: next.sort().join(',') }
+    })
+  }
 
   if (!currentQuestion) {
     return (
@@ -155,20 +252,14 @@ const TestRunContent = ({
                 : 'neutral'
           }
         />
-        <AppTextInput
-          label="Ваш ответ"
-          placeholder="Напишите развернутый ответ"
-          multiline
-          numberOfLines={6}
-          value={answers[currentQuestion.id] ?? ''}
-          onChangeText={(answer) =>
-            setAnswers((state) => ({
-              ...state,
-              [currentQuestion.id]: answer,
-            }))
+        <QuestionAnswerInput
+          question={currentQuestion}
+          answer={answers[currentQuestion.id] ?? ''}
+          onAnswerChange={(value) =>
+            setAnswers((state) => ({ ...state, [currentQuestion.id]: value }))
           }
-          hint="Ответ можно править и отправлять повторно."
-          containerStyle={{ marginTop: 8 }}
+          onToggleOption={(option) => toggleMultipleChoice(currentQuestion.id, option)}
+          theme={theme}
         />
         <View style={styles.actionsRow}>
           <AppButton

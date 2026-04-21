@@ -257,6 +257,7 @@ func (h *Handler) adminGetQuestions(c *gin.Context) {
 	filters := utils.AdminQuestionFilters{
 		Profession:     c.Query("profession"),
 		Chapter:        c.Query("chapter"),
+		Technology:     c.Query("technology"),
 		ExpertiseLevel: c.Query("expertise_level"),
 	}
 	questions, err := h.services.AdminServiceInterface.ListQuestions(filters)

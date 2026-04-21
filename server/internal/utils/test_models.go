@@ -107,10 +107,23 @@ type TestListItem struct {
 }
 
 type TestQuestionDetails struct {
-	ID         int     `json:"id" db:"id"`
-	Text       string  `json:"text" db:"text"`
-	UserAnswer *string `json:"user_answer" db:"user_answer"`
-	IsCorrect  *bool   `json:"is_correct" db:"is_correct"`
+	ID           int      `json:"id" db:"id"`
+	Text         string   `json:"text" db:"text"`
+	QuestionType string   `json:"question_type" db:"question_type"`
+	Options      []string `json:"options,omitempty"`
+	UserAnswer   *string  `json:"user_answer" db:"user_answer"`
+	IsCorrect    *bool    `json:"is_correct" db:"is_correct"`
+}
+
+// testQuestionRow is used only for scanning DB results that include profession_id/chapter_id.
+type TestQuestionRow struct {
+	ID           int     `db:"id"`
+	Text         string  `db:"text"`
+	QuestionType string  `db:"question_type"`
+	ProfessionID int     `db:"profession_id"`
+	ChapterID    int     `db:"chapter_id"`
+	UserAnswer   *string `db:"user_answer"`
+	IsCorrect    *bool   `db:"is_correct"`
 }
 
 type TestDetailsResponse struct {

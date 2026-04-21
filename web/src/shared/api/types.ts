@@ -61,9 +61,13 @@ export interface TestListItem {
   score: number | null
 }
 
+export type QuestionType = 'open' | 'single_choice' | 'multiple_choice'
+
 export interface TestQuestionDetails {
   id: number
   text: string
+  question_type: QuestionType
+  options?: string[]
   user_answer: string | null
   is_correct: boolean | null
 }

@@ -97,6 +97,40 @@ jobs:
       - run: go build ./...
       - run: go test ./... -v -count=1
 
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [test-web]
+    if: github.event_name == 'push'
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+      - name: Build web app
+        run: npm run build
+        working-directory: web
+      - name: Install e2e dependencies
+        run: npm ci
+        working-directory: e2e
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+      - name: Serve web build and run Playwright tests
+        run: |
+          npx serve ../web/dist -l 5173 &
+          sleep 3
+          BASE_URL=http://localhost:5173 npx playwright test --project=chromium
+        working-directory: e2e
+
   deploy:
     name: Deploy to server
     runs-on: ubuntu-latest

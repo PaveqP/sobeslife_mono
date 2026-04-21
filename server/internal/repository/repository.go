@@ -20,6 +20,7 @@ type Authorization interface {
 type Questions interface {
 	GetQuestionsByFilters(filters utils.QuestionFilters) ([]utils.QuestionResponse, error)
 	GetCorrectAnswer(question_id string) (string, error)
+	GetWrongAnswers(excludeID int, professionID int, chapterID int, limit int) ([]string, error)
 }
 
 type Tests interface {

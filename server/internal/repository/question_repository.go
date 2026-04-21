@@ -71,3 +71,21 @@ func (qr *QuestionRepository) GetCorrectAnswer(question_id string) (string, erro
 	}
 	return correctAnswer, nil
 }
+
+func (qr *QuestionRepository) GetWrongAnswers(excludeID int, professionID int, chapterID int, limit int) ([]string, error) {
+	query := `
+		SELECT correct_answer FROM question
+		WHERE id != $1
+			AND profession_id = $2
+			AND chapter_id = $3
+			AND correct_answer IS NOT NULL
+			AND correct_answer != ''
+		ORDER BY RANDOM()
+		LIMIT $4
+	`
+	var answers []string
+	if err := qr.db.Select(&answers, query, excludeID, professionID, chapterID, limit); err != nil {
+		return nil, err
+	}
+	return answers, nil
+}

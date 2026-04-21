@@ -101,6 +101,7 @@ type AdminTestQuestionItem struct {
 	QuestionID     int    `json:"question_id" db:"question_id"`
 	Text           string `json:"text" db:"text"`
 	CorrectAnswer  string `json:"correct_answer" db:"correct_answer"`
+	QuestionType   string `json:"question_type" db:"question_type"`
 	ExpertiseLevel string `json:"expertise_level" db:"expertise_level"`
 }
 
@@ -112,6 +113,7 @@ type AdminQuestionListItem struct {
 	ID             int     `json:"id" db:"id"`
 	Text           string  `json:"text" db:"text"`
 	CorrectAnswer  string  `json:"correct_answer" db:"correct_answer"`
+	QuestionType   string  `json:"question_type" db:"question_type"`
 	Profession     string  `json:"profession" db:"profession"`
 	Chapter        string  `json:"chapter" db:"chapter"`
 	Technology     *string `json:"technology" db:"technology"`
@@ -121,12 +123,14 @@ type AdminQuestionListItem struct {
 type AdminQuestionFilters struct {
 	Profession     string
 	Chapter        string
+	Technology     string
 	ExpertiseLevel string
 }
 
 type AdminCreateQuestionRequest struct {
 	Text           string  `json:"text" binding:"required"`
 	CorrectAnswer  string  `json:"correct_answer" binding:"required"`
+	QuestionType   string  `json:"question_type"`
 	Profession     string  `json:"profession" binding:"required"`
 	Chapter        string  `json:"chapter" binding:"required"`
 	Technology     *string `json:"technology"`
@@ -136,6 +140,7 @@ type AdminCreateQuestionRequest struct {
 type AdminUpdateQuestionRequest struct {
 	Text           *string `json:"text"`
 	CorrectAnswer  *string `json:"correct_answer"`
+	QuestionType   *string `json:"question_type"`
 	Profession     *string `json:"profession"`
 	Chapter        *string `json:"chapter"`
 	Technology     *string `json:"technology"`

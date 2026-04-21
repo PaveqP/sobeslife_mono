@@ -34,8 +34,8 @@ export default defineConfig([
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
-      // Downgraded: setState-in-effect is valid for syncing external data into form state
-      'react-hooks/exhaustive-deps': 'warn',
+      // Downgraded: theme-provider exports both component and helper — valid pattern
+      'react-refresh/only-export-components': 'warn',
     },
   },
 ])
