@@ -309,19 +309,39 @@ chmod 600 ~/.ssh/authorized_keys
 HTTP_PORT=8080
 ```
 
-И поднимите **системный** nginx (или Caddy) на 80/443 с `proxy_pass` на `http://127.0.0.1:8080` с заголовками `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto` (как в разделе ниже — пример для nginx).
+И поднимите **системный** nginx (или Caddy) на 80/443: публичный сайт (`web`) и админка (`admin`) — **разные порты** на localhost (из `.env`: `HTTP_PORT`, `ADMIN_HTTP_PORT`), на одном домене разведите префиксом **`/admin/`**.
 
-Пример фрагмента для **хостового** nginx:
+Пример фрагмента для **хостового** nginx (сначала более длинный префикс `/admin/`, затем всё остальное на `web`):
 
 ```nginx
+# Порты должны совпадать с HTTP_PORT и ADMIN_HTTP_PORT в `.env` (пример: 8080 и 8081).
+
+# Админка: полный URI в контейнер admin (SPA и /admin/api/ → app внутри compose).
+location /admin/ {
+    proxy_pass http://127.0.0.1:8081;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Публичный фронт + /api/, /auth/, /health (контейнер web).
 location / {
     proxy_pass http://127.0.0.1:8080;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
+
+Локально админка: `cd admin && npm run dev` → открыть **`http://localhost:5174/admin/`** (порт см. `admin/vite.config.ts`).
 
 ---
 
@@ -338,7 +358,9 @@ location / {
 | Симптом | Что проверить |
 |---------|----------------|
 | **502 на всём сайте** по HTTPS (`nginx/1.24` на Ubuntu внизу страницы) | Это **хостовый** nginx. Он должен `proxy_pass` на тот **порт хоста**, куда проброшен контейнер `web` (в `.env`: `HTTP_PORT`, по умолчанию `80`). Если на 80 уже слушает этот nginx, в `.env` задайте `HTTP_PORT=8080` и в `server { ... }` укажите `proxy_pass http://127.0.0.1:8080;`. Проверка: `docker compose ... ps` (у `web` и `app` — Up), `curl -sI http://127.0.0.1:ВАШ_ПОРТ/` |
+| **Админка** открывается как публичный сайт или 404 на `/admin/` | В хостовом nginx блок **`location /admin/`** должен идти **выше** `location /` и вести на порт **`ADMIN_HTTP_PORT`** (контейнер `admin`). Порты в конфиге — те же, что в `.env`. |
 | 502 / пустой ответ от `/api` | `docker compose ... logs app`; контейнер `app` — `Up`; проверка `exec web wget http://app:8080/health` (см. B4) |
+| **502 на POST** (`/auth/sign-in`, `/api/...`) при живом `GET /` | Часто: **`app` не отвечает вовремя** (БД/Redis) или **обрыв** из‑за таймаутов. Проверьте `docker logs …-app-1`; с хоста: `curl -sS -X POST http://127.0.0.1:ВАШ_HTTP_PORT/auth/sign-in -H 'Content-Type: application/json' -d '{}'`. На хостовом nginx задайте **`proxy_read_timeout` / `proxy_send_timeout`** (например 60s) для `location /` и при необходимости увеличьте таймауты в образе **`web`** (см. `web/nginx.conf`) и в **Go** (`server/internal/server/server.go`). |
 | После `git pull` в CI: `dubious ownership` | На сервере один раз: `git config --global --add safe.directory /opt/sobeslife` (workflow уже добавляет `safe.directory` для текущего пути) |
 | Actions не подключается по SSH | Секреты, `authorized_keys`, пользователь, что ключ не с переносами обрезан |
 | Фронт стучит не туда | Для deploy не задавайте полный URL API в `.env`; `VITE_API_URL` пустой = same origin |
@@ -352,7 +374,7 @@ location / {
 - [ ] Репозиторий клонирован, ветка `dev`
 - [ ] `.env` с сильным `DB_PASSWORD`
 - [ ] `docker compose -f docker-compose.deploy.yml --env-file .env up -d --build` завершается без ошибок
-- [ ] Сайт и `/health` открываются по IP
+- [ ] Сайт, `/health` и **`/admin/`** (админка) открываются по IP или домену; хостовый nginx — см. часть E
 - [ ] Секреты GitHub заданы, push в `dev` обновляет стенд
 
 ---

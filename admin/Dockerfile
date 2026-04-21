@@ -11,7 +11,8 @@ ENV VITE_ADMIN_API_URL=$VITE_ADMIN_API_URL
 RUN npm run build
 
 FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
+# base: '/admin/' — статика лежит под /admin/ на том же origin (см. nginx.conf).
+COPY --from=builder /app/dist /usr/share/nginx/html/admin
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

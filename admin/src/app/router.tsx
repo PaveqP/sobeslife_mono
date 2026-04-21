@@ -16,27 +16,30 @@ const RequireAuth = () => {
   return <Outlet />
 }
 
-const router = createBrowserRouter([
-  { path: '/sign-in', element: <SignInPage /> },
-  {
-    element: <RequireAuth />,
-    children: [
-      {
-        path: '/',
-        element: <AdminLayout />,
-        children: [
-          { index: true, element: <DashboardPage /> },
-          { path: 'users', element: <UsersPage /> },
-          { path: 'tests', element: <TestsPage /> },
-          { path: 'interviews', element: <InterviewsPage /> },
-          { path: 'analytics', element: <AnalyticsPage /> },
-          { path: 'admins', element: <AdminsPage /> },
-          { path: 'questions', element: <QuestionsPage /> },
-        ],
-      },
-    ],
-  },
-  { path: '*', element: <Navigate to="/" replace /> },
-])
+const router = createBrowserRouter(
+  [
+    { path: '/sign-in', element: <SignInPage /> },
+    {
+      element: <RequireAuth />,
+      children: [
+        {
+          path: '/',
+          element: <AdminLayout />,
+          children: [
+            { index: true, element: <DashboardPage /> },
+            { path: 'users', element: <UsersPage /> },
+            { path: 'tests', element: <TestsPage /> },
+            { path: 'interviews', element: <InterviewsPage /> },
+            { path: 'analytics', element: <AnalyticsPage /> },
+            { path: 'admins', element: <AdminsPage /> },
+            { path: 'questions', element: <QuestionsPage /> },
+          ],
+        },
+      ],
+    },
+    { path: '*', element: <Navigate to="/" replace /> },
+  ],
+  { basename: '/admin' },
+)
 
 export const AppRouter = () => <RouterProvider router={router} />

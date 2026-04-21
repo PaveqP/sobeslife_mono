@@ -15,8 +15,9 @@ func (s *Server) Run(port string, handler http.Handler) error {
 		Addr:           ":" + port,
 		Handler:        handler,
 		MaxHeaderBytes: 1 << 20,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		// Деплой за nginx: 10s часто рвёт соединение при холодной БД/Redis → 502 у клиента.
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 
 	return s.server.ListenAndServe()
