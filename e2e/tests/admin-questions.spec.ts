@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { getAdminAppBase } from './admin-base'
 
 /**
  * Admin questions page E2E tests.
@@ -6,12 +7,12 @@ import { test, expect } from '@playwright/test'
  * We use failOnStatusCode: false where the backend may be unavailable.
  */
 
-const ADMIN_BASE = process.env.ADMIN_BASE_URL || 'http://localhost:5174'
+const admin = getAdminAppBase()
 
 test.describe('Admin questions page', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to admin app and inject a fake admin token
-    await page.goto(`${ADMIN_BASE}/sign-in`, {
+    await page.goto(`${admin}/sign-in`, {
       waitUntil: 'domcontentloaded',
       failOnStatusCode: false,
     })
@@ -24,7 +25,7 @@ test.describe('Admin questions page', () => {
     await page.evaluate(() => {
       window.localStorage.removeItem('sobeslife.admin.accessToken')
     })
-    await page.goto(`${ADMIN_BASE}/sign-in`, {
+    await page.goto(`${admin}/sign-in`, {
       waitUntil: 'domcontentloaded',
       failOnStatusCode: false,
     })
@@ -33,7 +34,7 @@ test.describe('Admin questions page', () => {
   })
 
   test('questions page filter inputs are visible', async ({ page }) => {
-    await page.goto(`${ADMIN_BASE}/questions`, {
+    await page.goto(`${admin}/questions`, {
       waitUntil: 'domcontentloaded',
       failOnStatusCode: false,
     })
@@ -57,10 +58,10 @@ test.describe('Admin questions page', () => {
     await page.evaluate(() => {
       window.localStorage.removeItem('sobeslife.admin.accessToken')
     })
-    await page.goto(`${ADMIN_BASE}/`, {
+    await page.goto(`${admin}/`, {
       waitUntil: 'domcontentloaded',
       failOnStatusCode: false,
     })
-    await expect(page).toHaveURL(/sign-in/)
+    await expect(page).toHaveURL(/\/admin\/sign-in/)
   })
 })
