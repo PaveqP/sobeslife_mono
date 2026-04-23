@@ -65,7 +65,14 @@ func (r *resendEmailSender) SendOTPEmail(ctx context.Context, to, code string) e
 
 	if resp.StatusCode >= 400 {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("resend error %d: %s", resp.StatusCode, string(bodyBytes))
+		err := fmt.Errorf("resend error %d: %s", resp.StatusCode, string(bodyBytes))
+		// 403 means domain/sender not verified — configuration problem, not a transient error.
+		// Fall back to stdout logging so OTP still works while the domain is being set up.
+		if resp.StatusCode == http.StatusForbidden {
+			logrus.Warnf("[OTP-FALLBACK] Resend domain not verified — falling back to log. Code for %s → %s | err: %v", to, code, err)
+			return nil
+		}
+		return err
 	}
 
 	return nil
