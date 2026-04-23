@@ -21,7 +21,7 @@ test.describe('Admin questions page', () => {
     })
   })
 
-  test('admin sign-in page renders email and password inputs', async ({ page }) => {
+  test('admin sign-in page renders login and password inputs', async ({ page }) => {
     await page.evaluate(() => {
       window.localStorage.removeItem('sobeslife.admin.accessToken')
     })
@@ -29,7 +29,7 @@ test.describe('Admin questions page', () => {
       waitUntil: 'domcontentloaded',
       failOnStatusCode: false,
     })
-    await expect(page.locator('input[type="email"]')).toBeVisible()
+    await expect(page.locator('input[type="text"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
   })
 

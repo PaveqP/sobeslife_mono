@@ -6,7 +6,7 @@ test.describe('Admin auth', () => {
 
   test('admin sign-in page renders', async ({ page }) => {
     await page.goto(`${admin}/sign-in`)
-    await expect(page.locator('input[type="email"]')).toBeVisible()
+    await expect(page.locator('input[type="text"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
   })
 
