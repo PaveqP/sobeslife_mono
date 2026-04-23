@@ -12,7 +12,7 @@ export const SignInPage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [signIn, { isLoading, error }] = useSignInMutation()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ login: '', password: '' })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,11 +39,11 @@ export const SignInPage = () => {
         <Card>
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <Input
-              label="Email"
-              type="email"
-              placeholder="admin@example.com"
-              value={form.email}
-              onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+              label="Логин"
+              type="text"
+              placeholder="admin"
+              value={form.login}
+              onChange={(e) => setForm((s) => ({ ...s, login: e.target.value }))}
               required
             />
             <Input
@@ -55,7 +55,7 @@ export const SignInPage = () => {
               required
             />
             {error && (
-              <p className="text-xs text-danger">Неверный email или пароль</p>
+              <p className="text-xs text-danger">Неверный логин или пароль</p>
             )}
             <Button variant="primary" className="w-full" loading={isLoading} type="submit">
               Войти

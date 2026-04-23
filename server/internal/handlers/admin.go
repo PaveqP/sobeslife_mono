@@ -22,7 +22,7 @@ func (h *Handler) adminSignUp(c *gin.Context) {
 	result, err := h.services.AdminServiceInterface.CreateAdmin(req)
 	if err != nil {
 		logrus.Errorf("adminSignUp: %s", err)
-		if errors.Is(err, services.ErrAdminEmailTaken) {
+		if errors.Is(err, services.ErrAdminLoginTaken) {
 			c.AbortWithStatusJSON(http.StatusConflict, gin.H{"message": err.Error()})
 			return
 		}
@@ -47,7 +47,7 @@ func (h *Handler) adminSignIn(c *gin.Context) {
 		switch {
 		case errors.Is(err, services.ErrAdminNotFound),
 			errors.Is(err, services.ErrAdminInvalidCredentials):
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid email or password"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid login or password"})
 		default:
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		}

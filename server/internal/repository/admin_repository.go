@@ -16,26 +16,26 @@ func newAdminRepository(db *sqlx.DB) *AdminRepository {
 	return &AdminRepository{db}
 }
 
-func (r *AdminRepository) CreateAdmin(name string, email string, passwordHash string) (int, error) {
-	query := "INSERT INTO admin_users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id"
+func (r *AdminRepository) CreateAdmin(name string, login string, email string, passwordHash string) (int, error) {
+	query := "INSERT INTO admin_users (name, login, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING id"
 	var id int
-	if err := r.db.QueryRow(query, name, email, passwordHash).Scan(&id); err != nil {
+	if err := r.db.QueryRow(query, name, login, email, passwordHash).Scan(&id); err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (r *AdminRepository) GetAdminByEmail(email string) (*utils.AdminIdentity, error) {
-	query := "SELECT id, password_hash FROM admin_users WHERE lower(email) = lower($1) LIMIT 1"
+func (r *AdminRepository) GetAdminByLogin(login string) (*utils.AdminIdentity, error) {
+	query := "SELECT id, password_hash FROM admin_users WHERE lower(login) = lower($1) LIMIT 1"
 	var identity utils.AdminIdentity
-	if err := r.db.Get(&identity, query, email); err != nil {
+	if err := r.db.Get(&identity, query, login); err != nil {
 		return nil, err
 	}
 	return &identity, nil
 }
 
 func (r *AdminRepository) ListAdmins() ([]utils.AdminListAdminItem, error) {
-	query := `SELECT id, name, email, created_at::text FROM admin_users ORDER BY id ASC`
+	query := `SELECT id, name, login, email, created_at::text FROM admin_users ORDER BY id ASC`
 	result := make([]utils.AdminListAdminItem, 0)
 	if err := r.db.Select(&result, query); err != nil {
 		return nil, err

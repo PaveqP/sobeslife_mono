@@ -3,6 +3,7 @@ package utils
 type AdminUser struct {
 	ID           int    `json:"id" db:"id"`
 	Name         string `json:"name" db:"name"`
+	Login        string `json:"login" db:"login"`
 	Email        string `json:"email" db:"email"`
 	PasswordHash string `json:"password_hash" db:"password_hash"`
 	CreatedAt    string `json:"created_at" db:"created_at"`
@@ -10,12 +11,13 @@ type AdminUser struct {
 
 type AdminCreateRequest struct {
 	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required"`
+	Login    string `json:"login" binding:"required"`
+	Email    string `json:"email"`
 	Password string `json:"password" binding:"required"`
 }
 
 type AdminSignInRequest struct {
-	Email    string `json:"email" binding:"required"`
+	Login    string `json:"login" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -31,6 +33,7 @@ type AdminTokenResponse struct {
 type AdminListAdminItem struct {
 	ID        int    `json:"id" db:"id"`
 	Name      string `json:"name" db:"name"`
+	Login     string `json:"login" db:"login"`
 	Email     string `json:"email" db:"email"`
 	CreatedAt string `json:"created_at" db:"created_at"`
 }

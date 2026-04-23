@@ -3,12 +3,13 @@ export type TestStatus = 'assigned' | 'in_progress' | 'completed' | 'expired' | 
 export type InterviewStatus = 'in_progress' | 'completed' | 'summary_failed'
 
 export type AdminAuthTokens = { accessToken: string }
-export type AdminSignInRequest = { email: string; password: string }
-export type AdminSignUpRequest = { email: string; password: string; name: string }
+export type AdminSignInRequest = { login: string; password: string }
+export type AdminSignUpRequest = { login: string; email?: string; password: string; name: string }
 
 export type AdminListItem = {
   id: number
   name: string
+  login: string
   email: string
   created_at: string
 }

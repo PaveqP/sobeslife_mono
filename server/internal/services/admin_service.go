@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	ErrAdminEmailTaken         = errors.New("admin with this email already exists")
+	ErrAdminLoginTaken         = errors.New("admin with this login already exists")
 	ErrAdminNotFound           = errors.New("admin not found")
-	ErrAdminInvalidCredentials = errors.New("invalid email or password")
+	ErrAdminInvalidCredentials = errors.New("invalid login or password")
 )
 
 type AdminService struct {
@@ -30,9 +30,9 @@ func (s *AdminService) CreateAdmin(req utils.AdminCreateRequest) (*utils.AdminTo
 		return nil, err
 	}
 
-	id, err := s.repo.CreateAdmin(req.Name, req.Email, string(hash))
+	id, err := s.repo.CreateAdmin(req.Name, req.Login, req.Email, string(hash))
 	if err != nil {
-		return nil, ErrAdminEmailTaken
+		return nil, ErrAdminLoginTaken
 	}
 
 	tokens, err := s.jwt.GeneratedTokensPair(strconv.Itoa(id), utils.AudienceAdmin)
@@ -44,7 +44,7 @@ func (s *AdminService) CreateAdmin(req utils.AdminCreateRequest) (*utils.AdminTo
 }
 
 func (s *AdminService) SignIn(req utils.AdminSignInRequest) (*utils.AdminTokenResponse, error) {
-	identity, err := s.repo.GetAdminByEmail(req.Email)
+	identity, err := s.repo.GetAdminByLogin(req.Login)
 	if err != nil || identity == nil {
 		return nil, ErrAdminNotFound
 	}
@@ -78,11 +78,7 @@ func (s *AdminService) ListWebUsers() ([]utils.AdminUserListItem, error) {
 }
 
 func (s *AdminService) CreateWebUser(req utils.AdminCreateWebUserRequest) (*utils.AdminUserListItem, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-	return s.repo.CreateWebUser(req, string(hash))
+	return s.repo.CreateWebUser(req)
 }
 
 func (s *AdminService) UpdateWebUser(id int, req utils.AdminUpdateWebUserRequest) (*utils.AdminUserListItem, error) {

@@ -53,8 +53,8 @@ type Interviews interface {
 }
 
 type Admin interface {
-	CreateAdmin(name string, email string, passwordHash string) (int, error)
-	GetAdminByEmail(email string) (*utils.AdminIdentity, error)
+	CreateAdmin(name string, login string, email string, passwordHash string) (int, error)
+	GetAdminByLogin(login string) (*utils.AdminIdentity, error)
 	ListAdmins() ([]utils.AdminListAdminItem, error)
 	DeleteAdmin(id int) error
 	GetStats() (*utils.AdminStatsResponse, error)
