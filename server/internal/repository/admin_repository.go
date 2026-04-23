@@ -76,34 +76,22 @@ func (r *AdminRepository) GetStats() (*utils.AdminStatsResponse, error) {
 }
 
 func (r *AdminRepository) ListWebUsers() ([]utils.AdminUserListItem, error) {
-	// Try with created_at first (available after migration 000008)
 	query := `
-		SELECT u.id, u.nickname, u.email, u.phone_number,
+		SELECT u.id, u.nickname, u.email,
 			p.name AS profession, u.expertise_level::text,
-			u.created_at::text AS created_at
+			COALESCE(u.created_at::text, NOW()::text) AS created_at
 		FROM users u
 		LEFT JOIN profession p ON p.id = u.profession_id
 		ORDER BY u.id DESC
 	`
 	result := make([]utils.AdminUserListItem, 0)
 	if err := r.db.Select(&result, query); err != nil {
-		// Fallback: created_at column may not exist yet
-		fallback := `
-			SELECT u.id, u.nickname, u.email, u.phone_number,
-				p.name AS profession, u.expertise_level::text,
-				NOW()::text AS created_at
-			FROM users u
-			LEFT JOIN profession p ON p.id = u.profession_id
-			ORDER BY u.id DESC
-		`
-		if err2 := r.db.Select(&result, fallback); err2 != nil {
-			return nil, err2
-		}
+		return nil, err
 	}
 	return result, nil
 }
 
-func (r *AdminRepository) CreateWebUser(req utils.AdminCreateWebUserRequest, passwordHash string) (*utils.AdminUserListItem, error) {
+func (r *AdminRepository) CreateWebUser(req utils.AdminCreateWebUserRequest) (*utils.AdminUserListItem, error) {
 	var professionID *int
 	if req.Profession != nil && *req.Profession != "" {
 		var pid int
@@ -114,10 +102,10 @@ func (r *AdminRepository) CreateWebUser(req utils.AdminCreateWebUserRequest, pas
 
 	var id int
 	err := r.db.QueryRow(`
-		INSERT INTO users (email, password_hash, nickname, phone_number, profession_id, expertise_level)
-		VALUES ($1, $2, $3, $4, $5, $6::expertise_level)
+		INSERT INTO users (email, nickname, profession_id, expertise_level)
+		VALUES ($1, $2, $3, $4::expertise_level)
 		RETURNING id`,
-		req.Email, passwordHash, req.Nickname, req.PhoneNumber, professionID,
+		req.Email, req.Nickname, professionID,
 		expertiseLevelOrNil(req.ExpertiseLevel),
 	).Scan(&id)
 	if err != nil {
@@ -140,11 +128,6 @@ func (r *AdminRepository) UpdateWebUser(id int, req utils.AdminUpdateWebUserRequ
 	if req.Email != nil {
 		sets = append(sets, fmt.Sprintf("email = $%d", idx))
 		args = append(args, req.Email)
-		idx++
-	}
-	if req.PhoneNumber != nil {
-		sets = append(sets, fmt.Sprintf("phone_number = $%d", idx))
-		args = append(args, req.PhoneNumber)
 		idx++
 	}
 	if req.Profession != nil {
@@ -182,7 +165,7 @@ func (r *AdminRepository) UpdateWebUser(id int, req utils.AdminUpdateWebUserRequ
 
 func (r *AdminRepository) getWebUserByID(id int) (*utils.AdminUserListItem, error) {
 	query := `
-		SELECT u.id, u.nickname, u.email, u.phone_number,
+		SELECT u.id, u.nickname, u.email,
 			p.name AS profession, u.expertise_level::text,
 			COALESCE(u.created_at::text, NOW()::text) AS created_at
 		FROM users u

@@ -89,7 +89,7 @@ func main() {
 	})
 	repository := repository.NewRepository(db)
 	interviewLLM := llm.NewPolzaInterviewClient(cfg.LLM)
-	services := services.NewService(repository, jwt, interviewLLM)
+	services := services.NewService(repository, jwt, interviewLLM, cacheService)
 	handler := handlers.NewHandler(services, jwt, cacheService, "started successfully", time.Now())
 
 	c := cors.New(cors.Options{

@@ -2,22 +2,24 @@ package services
 
 import (
 	"context"
+	"sobeslife-services/internal/cache"
 	"sobeslife-services/internal/llm"
 	"sobeslife-services/internal/repository"
 	"sobeslife-services/internal/utils"
 )
 
 type Authorization interface {
-	CreateUser(userParams utils.CreateUserQuery) (string, error)
-	GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error)
-	AuthByNumber(phoneNumber string, password string) (*utils.TokensPair, error)
-	AuthByNickname(nickname string, password string) (*utils.TokensPair, error)
-	AuthByEmail(email string, password string) (*utils.TokensPair, error)
-	GetIsAdmin(userId string) (bool, error)
 	GetProfile(userID string) (*utils.UserProfileResponse, error)
 	UpdateProfile(userID string, request utils.UpdateUserProfileRequest) (*utils.UserProfileResponse, error)
+	// Google OAuth
 	GenerateGoogleOauthRedirectURI(state string, codeChallenge string) string
 	AuthByGoogleWithCode(code string, codeVerifier string) (*utils.TokensPair, error)
+	// GitHub OAuth
+	GenerateGithubOauthRedirectURI(state string) string
+	AuthByGithubWithCode(code string) (*utils.TokensPair, error)
+	// Email OTP
+	SendOTP(ctx context.Context, email string) error
+	VerifyOTP(ctx context.Context, email, code string) (*utils.TokensPair, error)
 }
 
 type Questions interface {
@@ -82,13 +84,13 @@ type Service struct {
 	AdminServiceInterface
 }
 
-func NewService(repo *repository.Repository, jwt *utils.JWTService, interviewLLM llm.InterviewClient) *Service {
+func NewService(repo *repository.Repository, jwt *utils.JWTService, interviewLLM llm.InterviewClient, c *cache.CacheService) *Service {
 	return &Service{
-		Authorization:        newAuthService(repo, jwt),
-		Questions:            newQuestionService(repo),
-		Tests:                newTestsService(repo),
-		Shared:               newSharedService(repo),
-		Interviews:           newInterviewsService(repo, interviewLLM),
+		Authorization:         newAuthService(repo, jwt, c),
+		Questions:             newQuestionService(repo),
+		Tests:                 newTestsService(repo),
+		Shared:                newSharedService(repo),
+		Interviews:            newInterviewsService(repo, interviewLLM),
 		AdminServiceInterface: newAdminService(repo.Admin, jwt),
 	}
 }

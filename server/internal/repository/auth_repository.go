@@ -17,9 +17,9 @@ func newAuthRepository(db *sqlx.DB) *AuthRepository {
 	return &AuthRepository{db}
 }
 
-func (r *AuthRepository) CreateUser(userParams utils.CreateUserQuery) (string, error) {
-	query := "INSERT INTO users (nickname, email, phone_number, password_hash, is_admin) VALUES ($1, $2, $3, $4, $5) RETURNING id"
-	row := r.db.QueryRow(query, userParams.Nickname, userParams.Email, userParams.PhoneNumber, userParams.Password, false)
+func (r *AuthRepository) CreateGoogleUser(email string, nickname string, _ string) (string, error) {
+	query := "INSERT INTO users (nickname, email) VALUES ($1, $2) RETURNING id"
+	row := r.db.QueryRow(query, nickname, email)
 	var userId string
 	if err := row.Scan(&userId); err != nil {
 		return "", err
@@ -27,9 +27,19 @@ func (r *AuthRepository) CreateUser(userParams utils.CreateUserQuery) (string, e
 	return userId, nil
 }
 
-func (r *AuthRepository) CreateGoogleUser(email string, nickname string, passwordHash string) (string, error) {
-	query := "INSERT INTO users (nickname, email, phone_number, password_hash, is_admin) VALUES ($1, $2, NULL, $3, $4) RETURNING id"
-	row := r.db.QueryRow(query, nickname, email, passwordHash, false)
+func (r *AuthRepository) CreateGithubUser(email string, nickname string) (string, error) {
+	query := "INSERT INTO users (nickname, email) VALUES ($1, $2) RETURNING id"
+	row := r.db.QueryRow(query, nickname, email)
+	var userId string
+	if err := row.Scan(&userId); err != nil {
+		return "", err
+	}
+	return userId, nil
+}
+
+func (r *AuthRepository) CreateOTPUser(email string) (string, error) {
+	query := "INSERT INTO users (email) VALUES ($1) RETURNING id"
+	row := r.db.QueryRow(query, email)
 	var userId string
 	if err := row.Scan(&userId); err != nil {
 		return "", err
@@ -38,7 +48,7 @@ func (r *AuthRepository) CreateGoogleUser(email string, nickname string, passwor
 }
 
 func (r *AuthRepository) GetUserByEmail(email string) (*utils.UserIdentity, error) {
-	query := "SELECT id, password_hash FROM users WHERE lower(email) = lower($1) LIMIT 2"
+	query := "SELECT id, '' AS password_hash FROM users WHERE lower(email) = lower($1) LIMIT 2"
 
 	var users []utils.UserIdentity
 	if err := r.db.Select(&users, query, email); err != nil {
@@ -55,29 +65,9 @@ func (r *AuthRepository) GetUserByEmail(email string) (*utils.UserIdentity, erro
 	return &users[0], nil
 }
 
-func (r *AuthRepository) GetUserByPhoneNumber(phoneNumber string) (*utils.UserIdentity, error) {
-	query := "SELECT id, password_hash FROM users WHERE phone_number = $1"
-	var userCredentials utils.UserIdentity
-	err := r.db.Get(&userCredentials, query, phoneNumber)
-	if err != nil {
-		return nil, err
-	}
-	return &userCredentials, nil
-}
-
-func (r *AuthRepository) GetIsAdmin(userId string) (bool, error) {
-	query := "SELECT is_admin FROM users WHERE id = $1"
-	var isAdmin bool
-	err := r.db.Get(&isAdmin, query, userId)
-	if err != nil {
-		return false, err
-	}
-	return isAdmin, nil
-}
-
 func (r *AuthRepository) UpdateUserProfile(userID string, params utils.UpdateUserProfileParams) (bool, error) {
-	fields := make([]string, 0, 3)
-	args := make([]interface{}, 0, 4)
+	fields := make([]string, 0, 10)
+	args := make([]interface{}, 0, 11)
 
 	if params.Nickname != nil {
 		args = append(args, *params.Nickname)
@@ -91,9 +81,36 @@ func (r *AuthRepository) UpdateUserProfile(userID string, params utils.UpdateUse
 		args = append(args, *params.Grade)
 		fields = append(fields, fmt.Sprintf("expertise_level = $%d", len(args)))
 	}
+	if params.FirstName != nil {
+		args = append(args, *params.FirstName)
+		fields = append(fields, fmt.Sprintf("first_name = $%d", len(args)))
+	}
+	if params.LastName != nil {
+		args = append(args, *params.LastName)
+		fields = append(fields, fmt.Sprintf("last_name = $%d", len(args)))
+	}
+	if params.YearsExperience != nil {
+		args = append(args, *params.YearsExperience)
+		fields = append(fields, fmt.Sprintf("years_experience = $%d", len(args)))
+	}
+	if params.GithubURL != nil {
+		args = append(args, *params.GithubURL)
+		fields = append(fields, fmt.Sprintf("github_url = $%d", len(args)))
+	}
+	if params.LinkedinURL != nil {
+		args = append(args, *params.LinkedinURL)
+		fields = append(fields, fmt.Sprintf("linkedin_url = $%d", len(args)))
+	}
+	if params.About != nil {
+		args = append(args, *params.About)
+		fields = append(fields, fmt.Sprintf("about = $%d", len(args)))
+	}
+
 	if len(fields) == 0 {
 		return false, nil
 	}
+
+	fields = append(fields, "profile_completed = true")
 
 	args = append(args, userID)
 	query := fmt.Sprintf(
@@ -127,18 +144,4 @@ func (r *AuthRepository) ListExpertiseLevels() ([]utils.ExpertiseLevel, error) {
 	}
 
 	return levels, nil
-}
-
-func (r *AuthRepository) GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error) {
-	user := utils.User{
-		ID:             1,
-		Nickname:       "sfdfs",
-		Email:          "vfdvfdvdf",
-		PasswordHash:   "vfdbdfbfd",
-		PhoneNumber:    "45423523",
-		DateOfBirth:    "svfsdbsd",
-		ProfessionID:   1,
-		ExpertiseLevel: "junior",
-	}
-	return user, nil
 }

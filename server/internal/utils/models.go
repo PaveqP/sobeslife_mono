@@ -49,20 +49,6 @@ type Chapter struct {
 	Name string `json:"name" db:"name"`
 }
 
-type CreateUserQuery struct {
-	Nickname    string `json:"nickname" db:"nickname"`
-	Email       string `json:"email" db:"email"`
-	PhoneNumber string `json:"phone_number" db:"phone_number"`
-	Password    string `json:"password" db:"password"`
-}
-
-type AuthRequest struct {
-	Nickname    *string `json:"nickname" db:"nickname"`
-	Email       *string `json:"email" db:"email"`
-	PhoneNumber *string `json:"phone_number" db:"phone_number"`
-	Password    string  `json:"password" db:"password"`
-}
-
 type GoogleCodeCallback struct {
 	Code         *string `json:"code"`
 	CodeVerifier *string `json:"code_verifier"`
@@ -91,4 +77,33 @@ type GoogleUserInfoResponse struct {
 	Sub           string `json:"sub"`
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
+}
+
+// OTP auth
+type OTPSendRequest struct {
+	Email string `json:"email" binding:"required"`
+}
+
+type OTPVerifyRequest struct {
+	Email string `json:"email" binding:"required"`
+	Code  string `json:"code" binding:"required"`
+}
+
+// GitHub OAuth
+type GithubCodeCallback struct {
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
+type GithubUserEmail struct {
+	Email    string `json:"email"`
+	Primary  bool   `json:"primary"`
+	Verified bool   `json:"verified"`
+}
+
+type GithubUserInfoResponse struct {
+	ID    int    `json:"id"`
+	Login string `json:"login"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }

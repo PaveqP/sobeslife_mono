@@ -111,11 +111,18 @@ type StartInterviewRequest struct {
 }
 
 type InterviewUserProfile struct {
-	UserID         int             `json:"user_id" db:"user_id"`
-	Nickname       *string         `json:"nickname" db:"nickname"`
-	ProfessionID   *int            `json:"profession_id" db:"profession_id"`
-	Profession     *string         `json:"profession" db:"profession"`
-	ExpertiseLevel *ExpertiseLevel `json:"expertise_level" db:"expertise_level"`
+	UserID           int             `json:"user_id" db:"user_id"`
+	Nickname         *string         `json:"nickname" db:"nickname"`
+	FirstName        *string         `json:"first_name" db:"first_name"`
+	LastName         *string         `json:"last_name" db:"last_name"`
+	ProfessionID     *int            `json:"profession_id" db:"profession_id"`
+	Profession       *string         `json:"profession" db:"profession"`
+	ExpertiseLevel   *ExpertiseLevel `json:"expertise_level" db:"expertise_level"`
+	YearsExperience  *int            `json:"years_experience" db:"years_experience"`
+	GithubURL        *string         `json:"github_url" db:"github_url"`
+	LinkedinURL      *string         `json:"linkedin_url" db:"linkedin_url"`
+	About            *string         `json:"about" db:"about"`
+	ProfileCompleted bool            `json:"profile_completed" db:"profile_completed"`
 }
 
 type InterviewProfileSnapshot struct {

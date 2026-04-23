@@ -28,7 +28,7 @@ export const AdminLayout = () => {
   return (
     <div className="flex min-h-screen bg-page">
       {/* Sidebar */}
-      <aside className="flex w-60 shrink-0 flex-col border-r border-border-subtle bg-surface">
+      <aside className="flex w-60 shrink-0 flex-col border-r border-border-subtle bg-surface sticky top-0 h-screen overflow-hidden">
         <div className="flex h-14 items-center gap-2.5 border-b border-border-subtle px-5">
           <div className="flex size-7 items-center justify-center rounded-lg bg-accent-soft">
             <Shield className="size-4 text-accent" />
@@ -38,7 +38,7 @@ export const AdminLayout = () => {
           </Link>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5 p-2">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2">
           <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-text-tertiary">
             Управление
           </p>

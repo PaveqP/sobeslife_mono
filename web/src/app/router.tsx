@@ -1,5 +1,8 @@
-import { Navigate, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, Outlet, RouterProvider, createBrowserRouter, useLocation, useNavigate } from 'react-router-dom'
 import { useAppSelector } from '@/app/store'
+import { useGetProfileQuery } from '@/shared/api/users-api'
+import { GithubAuthCallbackPage } from '@/pages/github-auth-callback-page'
 import { GoogleAuthCallbackPage } from '@/pages/google-auth-callback-page'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { RootLayout } from '@/pages/root-layout'
@@ -14,6 +17,16 @@ import { ProfilePage } from '@/pages/profile-page'
 
 const RequireAuth = () => {
   const accessToken = useAppSelector((state) => state.auth.accessToken)
+  const { data: profile } = useGetProfileQuery(undefined, { skip: !accessToken })
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (profile && !profile.profile_completed && location.pathname !== '/profile') {
+      navigate('/profile', { replace: true })
+    }
+  }, [profile, navigate, location.pathname])
+
   if (!accessToken) return <Navigate to="/sign-in" replace />
   return <Outlet />
 }
@@ -22,6 +35,7 @@ const router = createBrowserRouter([
   { path: '/sign-in', element: <SignInPage /> },
   { path: '/sign-up', element: <SignUpPage /> },
   { path: '/auth/google', element: <GoogleAuthCallbackPage /> },
+  { path: '/auth/github', element: <GithubAuthCallbackPage /> },
   {
     element: <RequireAuth />,
     children: [

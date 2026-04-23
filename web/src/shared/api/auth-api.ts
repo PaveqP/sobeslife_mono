@@ -1,5 +1,13 @@
 import { baseApi } from '@/shared/api/base-api'
-import type { AuthTokens, GoogleAuthCallbackRequest, GoogleAuthUrlRequest, SignInRequest, SignUpRequest } from '@/shared/api/types'
+import type {
+  AuthTokens,
+  GithubAuthCallbackRequest,
+  GithubAuthUrlRequest,
+  GoogleAuthCallbackRequest,
+  GoogleAuthUrlRequest,
+  OTPSendRequest,
+  OTPVerifyRequest,
+} from '@/shared/api/types'
 
 /** Бэкенд отдаёт camelCase (json-теги); без тегов Go шлёт PascalCase — поддерживаем оба варианта. */
 function tokensFromAuthResponse(response: unknown): AuthTokens {
@@ -16,22 +24,24 @@ function tokensFromAuthResponse(response: unknown): AuthTokens {
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    signIn: build.mutation<AuthTokens, SignInRequest>({
+    // Email OTP
+    sendOTP: build.mutation<{ message: string }, OTPSendRequest>({
       query: (body) => ({
-        url: '/auth/sign-in',
+        url: '/auth/otp/send',
+        method: 'POST',
+        body,
+      }),
+    }),
+    verifyOTP: build.mutation<AuthTokens, OTPVerifyRequest>({
+      query: (body) => ({
+        url: '/auth/otp/verify',
         method: 'POST',
         body,
       }),
       transformResponse: (response: unknown): AuthTokens => tokensFromAuthResponse(response),
       invalidatesTags: ['Auth'],
     }),
-    signUp: build.mutation<string, SignUpRequest>({
-      query: (body) => ({
-        url: '/auth/sign-up',
-        method: 'POST',
-        body,
-      }),
-    }),
+    // Google OAuth
     startGoogleAuth: build.mutation<string, GoogleAuthUrlRequest>({
       query: ({ state, codeChallenge }) => ({
         url: '/auth/google/url',
@@ -51,7 +61,31 @@ export const authApi = baseApi.injectEndpoints({
       transformResponse: (response: unknown): AuthTokens => tokensFromAuthResponse(response),
       invalidatesTags: ['Auth'],
     }),
+    // GitHub OAuth
+    startGithubAuth: build.mutation<string, GithubAuthUrlRequest>({
+      query: ({ state }) => ({
+        url: '/auth/github/url',
+        method: 'GET',
+        params: { state },
+      }),
+    }),
+    githubCallback: build.mutation<AuthTokens, GithubAuthCallbackRequest>({
+      query: (body) => ({
+        url: '/auth/github/callback',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: unknown): AuthTokens => tokensFromAuthResponse(response),
+      invalidatesTags: ['Auth'],
+    }),
   }),
 })
 
-export const { useGoogleCallbackMutation, useSignInMutation, useSignUpMutation, useStartGoogleAuthMutation } = authApi
+export const {
+  useGoogleCallbackMutation,
+  useStartGoogleAuthMutation,
+  useSendOTPMutation,
+  useVerifyOTPMutation,
+  useStartGithubAuthMutation,
+  useGithubCallbackMutation,
+} = authApi

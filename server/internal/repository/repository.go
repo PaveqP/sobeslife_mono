@@ -7,12 +7,10 @@ import (
 )
 
 type Authorization interface {
-	CreateUser(userParams utils.CreateUserQuery) (string, error)
 	CreateGoogleUser(email string, nickname string, passwordHash string) (string, error)
-	GetUser(nickname string, email string, phoneNumber string, password string) (utils.User, error)
+	CreateGithubUser(email string, nickname string) (string, error)
+	CreateOTPUser(email string) (string, error)
 	GetUserByEmail(email string) (*utils.UserIdentity, error)
-	GetUserByPhoneNumber(phoneNumber string) (*utils.UserIdentity, error)
-	GetIsAdmin(userId string) (bool, error)
 	UpdateUserProfile(userID string, params utils.UpdateUserProfileParams) (bool, error)
 	ListExpertiseLevels() ([]utils.ExpertiseLevel, error)
 }
@@ -61,7 +59,7 @@ type Admin interface {
 	DeleteAdmin(id int) error
 	GetStats() (*utils.AdminStatsResponse, error)
 	ListWebUsers() ([]utils.AdminUserListItem, error)
-	CreateWebUser(req utils.AdminCreateWebUserRequest, passwordHash string) (*utils.AdminUserListItem, error)
+	CreateWebUser(req utils.AdminCreateWebUserRequest) (*utils.AdminUserListItem, error)
 	UpdateWebUser(id int, req utils.AdminUpdateWebUserRequest) (*utils.AdminUserListItem, error)
 	DeleteWebUser(userID int) error
 	ListInterviews() ([]utils.AdminInterviewListItem, error)

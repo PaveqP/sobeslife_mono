@@ -9,16 +9,22 @@ export interface AuthTokens {
   refreshToken: string
 }
 
-export interface SignInRequest {
-  phone_number: string
-  password: string
+export interface OTPSendRequest {
+  email: string
 }
 
-export interface SignUpRequest {
-  email?: string
-  phone_number?: string
-  password: string
-  nickname?: string
+export interface OTPVerifyRequest {
+  email: string
+  code: string
+}
+
+export interface GithubAuthUrlRequest {
+  state: string
+}
+
+export interface GithubAuthCallbackRequest {
+  code: string
+  state: string
 }
 
 export interface GoogleAuthUrlRequest {
@@ -122,15 +128,28 @@ export interface CompleteTestResponse {
 export interface UserProfile {
   user_id: number
   nickname: string | null
+  first_name: string | null
+  last_name: string | null
   profession_id: number | null
   profession: string | null
   grade: ExpertiseLevel | null
+  years_experience: number | null
+  github_url: string | null
+  linkedin_url: string | null
+  about: string | null
+  profile_completed: boolean
 }
 
 export interface UpdateUserProfileRequest {
   profession?: string | null
   grade?: string | null
   nickname?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  years_experience?: number | null
+  github_url?: string | null
+  linkedin_url?: string | null
+  about?: string | null
 }
 
 export interface TestsStatistics {

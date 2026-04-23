@@ -27,10 +27,15 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	router.GET("/health", h.HealthCheck)
 	auth := router.Group("/auth")
 	{
-		auth.POST("/sign-up", h.signUp)
-		auth.POST("/sign-in", h.signIn)
+		// Google OAuth
 		auth.GET("/google/url", h.googleUrl)
 		auth.POST("/google/callback", h.googleCallback)
+		// GitHub OAuth
+		auth.GET("/github/url", h.githubUrl)
+		auth.POST("/github/callback", h.githubCallback)
+		// Email OTP
+		auth.POST("/otp/send", h.otpSend)
+		auth.POST("/otp/verify", h.otpVerify)
 	}
 	api := router.Group("/api", h.identifyUser)
 	{

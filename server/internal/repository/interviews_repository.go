@@ -114,9 +114,16 @@ func (r *InterviewsRepository) GetUserProfile(userID string) (*utils.InterviewUs
 	query := `SELECT
 		u.id AS user_id,
 		u.nickname,
+		u.first_name,
+		u.last_name,
 		u.profession_id,
 		p.name AS profession,
-		u.expertise_level
+		u.expertise_level,
+		u.years_experience,
+		u.github_url,
+		u.linkedin_url,
+		u.about,
+		u.profile_completed
 	FROM users u
 	LEFT JOIN profession p ON p.id = u.profession_id
 	WHERE u.id = $1`

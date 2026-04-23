@@ -11,8 +11,8 @@ test.describe('Auth flow', () => {
     await expect(page).toHaveURL(/sign-in/)
   })
 
-  test('sign-up page is accessible', async ({ page }) => {
+  test('sign-up page redirects to sign-in', async ({ page }) => {
     await page.goto('/sign-up')
-    await expect(page.locator('input').first()).toBeVisible()
+    await expect(page).toHaveURL(/sign-in/)
   })
 })

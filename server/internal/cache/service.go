@@ -8,8 +8,12 @@ import (
 
 type CacheService struct {
 	QuestionCache
+	OTPCache
 }
 
 func NewCacheService(client *redis.Client, expiration time.Duration) *CacheService {
-	return &CacheService{QuestionCache: NewQuestionCacheService(client, expiration)}
+	return &CacheService{
+		QuestionCache: NewQuestionCacheService(client, expiration),
+		OTPCache:      newOTPCache(client),
+	}
 }

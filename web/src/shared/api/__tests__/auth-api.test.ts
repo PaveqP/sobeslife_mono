@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { authApi, useSignInMutation, useSignUpMutation, useStartGoogleAuthMutation, useGoogleCallbackMutation } from '../auth-api'
+import { authApi, useStartGoogleAuthMutation, useGoogleCallbackMutation, useSendOTPMutation, useVerifyOTPMutation, useStartGithubAuthMutation, useGithubCallbackMutation } from '../auth-api'
 
 describe('authApi endpoints', () => {
-  it('authApi has signIn endpoint', () => {
-    expect(authApi.endpoints).toHaveProperty('signIn')
+  it('authApi has sendOTP endpoint', () => {
+    expect(authApi.endpoints).toHaveProperty('sendOTP')
   })
 
-  it('authApi has signUp endpoint', () => {
-    expect(authApi.endpoints).toHaveProperty('signUp')
+  it('authApi has verifyOTP endpoint', () => {
+    expect(authApi.endpoints).toHaveProperty('verifyOTP')
   })
 
   it('authApi has startGoogleAuth endpoint', () => {
@@ -18,21 +18,22 @@ describe('authApi endpoints', () => {
     expect(authApi.endpoints).toHaveProperty('googleCallback')
   })
 
-  it('signIn endpoint uses POST method', () => {
-    const endpoint = authApi.endpoints.signIn
-    // initiate builds the query config
-    const thunk = endpoint.initiate({ phone_number: '+71234567890', password: 'pass' })
-    expect(thunk).toBeDefined()
+  it('authApi has startGithubAuth endpoint', () => {
+    expect(authApi.endpoints).toHaveProperty('startGithubAuth')
+  })
+
+  it('authApi has githubCallback endpoint', () => {
+    expect(authApi.endpoints).toHaveProperty('githubCallback')
   })
 })
 
 describe('authApi exported hooks', () => {
-  it('exports useSignInMutation', () => {
-    expect(typeof useSignInMutation).toBe('function')
+  it('exports useSendOTPMutation', () => {
+    expect(typeof useSendOTPMutation).toBe('function')
   })
 
-  it('exports useSignUpMutation', () => {
-    expect(typeof useSignUpMutation).toBe('function')
+  it('exports useVerifyOTPMutation', () => {
+    expect(typeof useVerifyOTPMutation).toBe('function')
   })
 
   it('exports useStartGoogleAuthMutation', () => {
@@ -42,11 +43,19 @@ describe('authApi exported hooks', () => {
   it('exports useGoogleCallbackMutation', () => {
     expect(typeof useGoogleCallbackMutation).toBe('function')
   })
+
+  it('exports useStartGithubAuthMutation', () => {
+    expect(typeof useStartGithubAuthMutation).toBe('function')
+  })
+
+  it('exports useGithubCallbackMutation', () => {
+    expect(typeof useGithubCallbackMutation).toBe('function')
+  })
 })
 
 describe('authApi query structure', () => {
-  it('signIn endpoint initiate returns a thunk function', () => {
-    const thunk = authApi.endpoints.signIn.initiate({ phone_number: '+71234567890', password: 'pass' })
+  it('sendOTP endpoint initiate returns a thunk function', () => {
+    const thunk = authApi.endpoints.sendOTP.initiate({ email: 'test@example.com' })
     expect(typeof thunk).toBe('function')
   })
 

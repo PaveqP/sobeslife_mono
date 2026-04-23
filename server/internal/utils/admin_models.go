@@ -39,7 +39,6 @@ type AdminUserListItem struct {
 	ID             int     `json:"id" db:"id"`
 	Nickname       *string `json:"nickname" db:"nickname"`
 	Email          string  `json:"email" db:"email"`
-	PhoneNumber    *string `json:"phone_number" db:"phone_number"`
 	Profession     *string `json:"profession" db:"profession"`
 	ExpertiseLevel *string `json:"expertise_level" db:"expertise_level"`
 	CreatedAt      string  `json:"created_at" db:"created_at"`
@@ -47,9 +46,7 @@ type AdminUserListItem struct {
 
 type AdminCreateWebUserRequest struct {
 	Email          string  `json:"email" binding:"required"`
-	Password       string  `json:"password" binding:"required"`
 	Nickname       *string `json:"nickname"`
-	PhoneNumber    *string `json:"phone_number"`
 	Profession     *string `json:"profession"`
 	ExpertiseLevel *string `json:"expertise_level"`
 }
@@ -57,7 +54,6 @@ type AdminCreateWebUserRequest struct {
 type AdminUpdateWebUserRequest struct {
 	Nickname       *string `json:"nickname"`
 	Email          *string `json:"email"`
-	PhoneNumber    *string `json:"phone_number"`
 	Profession     *string `json:"profession"`
 	ExpertiseLevel *string `json:"expertise_level"`
 }

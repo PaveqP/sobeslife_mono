@@ -25,13 +25,13 @@ export const RootLayout = () => {
   return (
     <div className="flex min-h-screen bg-page">
       {/* Sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-border-subtle bg-surface lg:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-border-subtle bg-surface lg:flex sticky top-0 h-screen overflow-hidden">
         <div className="flex h-16 items-center border-b border-border-subtle px-5">
           <Link to="/" className="text-lg font-semibold text-text-primary">
             Sobeslife
           </Link>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}

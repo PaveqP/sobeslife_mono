@@ -20,6 +20,10 @@ vi.mock('@/shared/lib/oauth', () => ({
   prepareGoogleOauthSession: vi.fn().mockResolvedValue({ state: 'state', codeChallenge: 'challenge' }),
 }))
 
+vi.mock('@/shared/lib/github-oauth', () => ({
+  prepareGithubOauthSession: vi.fn().mockReturnValue('github-state'),
+}))
+
 vi.mock('@/shared/theme/theme-provider', () => ({
   ThemeToggle: () => <button aria-label="toggle theme">Theme</button>,
 }))
@@ -54,14 +58,14 @@ describe('SignInPage', () => {
     expect(screen.getByRole('heading', { name: 'Вход' })).toBeInTheDocument()
   })
 
-  it('renders phone number input', () => {
+  it('renders email input', () => {
     renderSignInPage()
-    expect(screen.getByPlaceholderText('+7 999 123-45-67')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument()
   })
 
-  it('renders password input', () => {
+  it('renders send code button', () => {
     renderSignInPage()
-    expect(screen.getByPlaceholderText('Введите пароль')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Получить код/i })).toBeInTheDocument()
   })
 
   it('renders Google sign-in button', () => {
@@ -69,40 +73,16 @@ describe('SignInPage', () => {
     expect(screen.getByRole('button', { name: /Google/i })).toBeInTheDocument()
   })
 
-  it('renders link to sign-up page', () => {
+  it('renders GitHub sign-in button', () => {
     renderSignInPage()
-    expect(screen.getByRole('link', { name: /Зарегистрироваться/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /GitHub/i })).toBeInTheDocument()
   })
 
-  it('renders submit button', () => {
+  it('updates email input on change', () => {
     renderSignInPage()
-    expect(screen.getByRole('button', { name: /Войти/i })).toBeInTheDocument()
-  })
-
-  it('updates phone number input on change', () => {
-    renderSignInPage()
-    const phoneInput = screen.getByPlaceholderText('+7 999 123-45-67')
-    fireEvent.change(phoneInput, { target: { value: '+79991234567' } })
-    expect((phoneInput as HTMLInputElement).value).toBe('+79991234567')
-  })
-
-  it('updates password input on change', () => {
-    renderSignInPage()
-    const passwordInput = screen.getByPlaceholderText('Введите пароль')
-    fireEvent.change(passwordInput, { target: { value: 'mypassword' } })
-    expect((passwordInput as HTMLInputElement).value).toBe('mypassword')
-  })
-
-  it('shows success message when location state has registered flag', () => {
-    const store = makeStore()
-    render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={[{ pathname: '/sign-in', state: { registered: true } }]}>
-          <SignInPage />
-        </MemoryRouter>
-      </Provider>,
-    )
-    expect(screen.getByText(/Аккаунт создан/i)).toBeInTheDocument()
+    const emailInput = screen.getByPlaceholderText('you@example.com')
+    fireEvent.change(emailInput, { target: { value: 'user@example.com' } })
+    expect((emailInput as HTMLInputElement).value).toBe('user@example.com')
   })
 
   it('google button triggers auth flow on click', async () => {
