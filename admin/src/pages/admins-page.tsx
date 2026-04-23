@@ -12,14 +12,14 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@
 
 const CreateAdminDialog = ({ onClose }: { onClose: () => void }) => {
   const [createAdmin, { isLoading }] = useCreateAdminMutation()
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [form, setForm] = useState({ name: '', login: '', password: '' })
   const [error, setError] = useState('')
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((s) => ({ ...s, [k]: e.target.value }))
 
   const handleSave = async () => {
-    if (!form.name || !form.email || !form.password) {
+    if (!form.name || !form.login || !form.password) {
       setError('Все поля обязательны')
       return
     }
@@ -27,7 +27,7 @@ const CreateAdminDialog = ({ onClose }: { onClose: () => void }) => {
       await createAdmin(form).unwrap()
       onClose()
     } catch {
-      setError('Не удалось создать администратора (email уже занят?)')
+      setError('Не удалось создать администратора (логин уже занят?)')
     }
   }
 
@@ -43,7 +43,7 @@ const CreateAdminDialog = ({ onClose }: { onClose: () => void }) => {
         <div className="space-y-3">
           {error && <p className="text-xs text-danger">{error}</p>}
           <Input label="Имя *" value={form.name} onChange={set('name')} placeholder="Иван Иванов" />
-          <Input label="Email *" type="email" value={form.email} onChange={set('email')} placeholder="admin@example.com" />
+          <Input label="Логин *" value={form.login} onChange={set('login')} placeholder="admin_ivan" />
           <Input label="Пароль *" type="password" value={form.password} onChange={set('password')} placeholder="Минимум 6 символов" />
         </div>
         <div className="flex justify-end gap-2">
@@ -105,7 +105,7 @@ export const AdminsPage = () => {
             <tr>
               <TableHeader>ID</TableHeader>
               <TableHeader>Имя</TableHeader>
-              <TableHeader>Email</TableHeader>
+              <TableHeader>Логин</TableHeader>
               <TableHeader>Роль</TableHeader>
               <TableHeader>Создан</TableHeader>
               <TableHeader />
@@ -116,7 +116,7 @@ export const AdminsPage = () => {
               <TableRow key={admin.id}>
                 <TableCell className="text-text-tertiary">{admin.id}</TableCell>
                 <TableCell className="font-medium">{admin.name}</TableCell>
-                <TableCell className="text-text-secondary">{admin.email}</TableCell>
+                <TableCell className="text-text-secondary">{admin.login}</TableCell>
                 <TableCell>
                   <Badge tone="accent">Admin</Badge>
                 </TableCell>

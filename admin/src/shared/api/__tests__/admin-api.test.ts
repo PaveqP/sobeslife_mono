@@ -97,7 +97,7 @@ describe('adminApi endpoints exist', () => {
 
 describe('adminApi URL / method structure', () => {
   it('signIn initiate returns a thunk function', () => {
-    const thunk = adminApi.endpoints.signIn.initiate({ email: 'a@b.com', password: 'pass' })
+    const thunk = adminApi.endpoints.signIn.initiate({ login: 'admin', password: 'pass' })
     expect(typeof thunk).toBe('function')
   })
 
