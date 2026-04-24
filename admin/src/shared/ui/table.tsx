@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ThHTMLAttributes, TdHTMLAttributes } from 'react'
+import type { PropsWithChildren, ThHTMLAttributes, TdHTMLAttributes, HTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
 
 export const Table = ({ children, className }: PropsWithChildren<{ className?: string }>) => (
@@ -15,8 +15,8 @@ export const TableBody = ({ children }: PropsWithChildren) => (
   <tbody className="divide-y divide-border-subtle">{children}</tbody>
 )
 
-export const TableRow = ({ children, className }: PropsWithChildren<{ className?: string }>) => (
-  <tr className={cn('transition hover:bg-surface-subtle/60', className)}>{children}</tr>
+export const TableRow = ({ children, className, ...props }: PropsWithChildren<{ className?: string } & HTMLAttributes<HTMLTableRowElement>>) => (
+  <tr className={cn('transition hover:bg-surface-subtle/60', className)} {...props}>{children}</tr>
 )
 
 export const TableHeader = ({

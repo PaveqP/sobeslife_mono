@@ -171,7 +171,7 @@ const UserDetailPanel = ({ user, onClose }: { user: WebUser; onClose: () => void
         <div className="flex flex-wrap gap-2">
           {user.profession && <Badge>{user.profession}</Badge>}
           {user.expertise_level && <Badge tone="accent">{user.expertise_level}</Badge>}
-          <Badge tone={user.profile_completed ? 'success' : 'warning'}>
+          <Badge tone={user.profile_completed ? 'success' : 'neutral'}>
             {user.profile_completed ? 'Профиль заполнен' : 'Профиль не заполнен'}
           </Badge>
         </div>
@@ -416,7 +416,7 @@ export const UsersPage = () => {
                   {user.years_experience != null ? `${user.years_experience} л` : '—'}
                 </TableCell>
                 <TableCell>
-                  <Badge tone={user.profile_completed ? 'success' : 'warning'}>
+                  <Badge tone={user.profile_completed ? 'success' : 'neutral'}>
                     {user.profile_completed ? '✓' : '—'}
                   </Badge>
                 </TableCell>
