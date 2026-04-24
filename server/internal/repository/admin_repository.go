@@ -77,8 +77,10 @@ func (r *AdminRepository) GetStats() (*utils.AdminStatsResponse, error) {
 
 func (r *AdminRepository) ListWebUsers() ([]utils.AdminUserListItem, error) {
 	query := `
-		SELECT u.id, u.nickname, u.email,
+		SELECT u.id, u.nickname, u.first_name, u.last_name, u.email,
 			p.name AS profession, u.expertise_level::text,
+			u.years_experience, u.github_url, u.linkedin_url, u.about,
+			u.profile_completed,
 			COALESCE(u.created_at::text, NOW()::text) AS created_at
 		FROM users u
 		LEFT JOIN profession p ON p.id = u.profession_id
@@ -165,8 +167,10 @@ func (r *AdminRepository) UpdateWebUser(id int, req utils.AdminUpdateWebUserRequ
 
 func (r *AdminRepository) getWebUserByID(id int) (*utils.AdminUserListItem, error) {
 	query := `
-		SELECT u.id, u.nickname, u.email,
+		SELECT u.id, u.nickname, u.first_name, u.last_name, u.email,
 			p.name AS profession, u.expertise_level::text,
+			u.years_experience, u.github_url, u.linkedin_url, u.about,
+			u.profile_completed,
 			COALESCE(u.created_at::text, NOW()::text) AS created_at
 		FROM users u
 		LEFT JOIN profession p ON p.id = u.profession_id

@@ -39,12 +39,19 @@ type AdminListAdminItem struct {
 }
 
 type AdminUserListItem struct {
-	ID             int     `json:"id" db:"id"`
-	Nickname       *string `json:"nickname" db:"nickname"`
-	Email          string  `json:"email" db:"email"`
-	Profession     *string `json:"profession" db:"profession"`
-	ExpertiseLevel *string `json:"expertise_level" db:"expertise_level"`
-	CreatedAt      string  `json:"created_at" db:"created_at"`
+	ID               int     `json:"id" db:"id"`
+	Nickname         *string `json:"nickname" db:"nickname"`
+	FirstName        *string `json:"first_name" db:"first_name"`
+	LastName         *string `json:"last_name" db:"last_name"`
+	Email            string  `json:"email" db:"email"`
+	Profession       *string `json:"profession" db:"profession"`
+	ExpertiseLevel   *string `json:"expertise_level" db:"expertise_level"`
+	YearsExperience  *int    `json:"years_experience" db:"years_experience"`
+	GithubURL        *string `json:"github_url" db:"github_url"`
+	LinkedinURL      *string `json:"linkedin_url" db:"linkedin_url"`
+	About            *string `json:"about" db:"about"`
+	ProfileCompleted bool    `json:"profile_completed" db:"profile_completed"`
+	CreatedAt        string  `json:"created_at" db:"created_at"`
 }
 
 type AdminCreateWebUserRequest struct {

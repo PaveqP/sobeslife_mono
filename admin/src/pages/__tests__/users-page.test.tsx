@@ -64,10 +64,16 @@ describe('UsersPage', () => {
         {
           id: 1,
           nickname: 'john_doe',
+          first_name: null,
+          last_name: null,
           email: 'john@example.com',
-          phone_number: '+71234567890',
           profession: 'Frontend',
           expertise_level: 'junior',
+          years_experience: null,
+          github_url: null,
+          linkedin_url: null,
+          about: null,
+          profile_completed: false,
           created_at: '2024-01-15T10:00:00Z',
         },
       ],
@@ -87,6 +93,6 @@ describe('UsersPage', () => {
     })
 
     renderUsersPage()
-    expect(screen.getByText(/0 пользователей/i)).toBeInTheDocument()
+    expect(screen.getByText(/0 из 0 пользователей/i)).toBeInTheDocument()
   })
 })

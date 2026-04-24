@@ -17,18 +17,22 @@ export type AdminListItem = {
 export type WebUser = {
   id: number
   nickname: string | null
+  first_name: string | null
+  last_name: string | null
   email: string
-  phone_number: string | null
   profession: string | null
   expertise_level: ExpertiseLevel | null
+  years_experience: number | null
+  github_url: string | null
+  linkedin_url: string | null
+  about: string | null
+  profile_completed: boolean
   created_at: string
 }
 
 export type CreateWebUserRequest = {
   email: string
-  password: string
   nickname?: string | null
-  phone_number?: string | null
   profession?: string | null
   expertise_level?: string | null
 }
@@ -36,7 +40,6 @@ export type CreateWebUserRequest = {
 export type UpdateWebUserRequest = {
   nickname?: string | null
   email?: string | null
-  phone_number?: string | null
   profession?: string | null
   expertise_level?: string | null
 }
