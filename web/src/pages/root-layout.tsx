@@ -1,7 +1,8 @@
 import { LogOut, BarChart3, BookOpen, MessageSquare, User } from 'lucide-react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAppDispatch } from '@/app/store'
+import { useAppDispatch, useAppSelector } from '@/app/store'
 import { clearCredentials } from '@/features/auth/auth-slice'
+import { useGetProfileQuery } from '@/shared/api/users-api'
 import { ThemeToggle } from '@/shared/theme/theme-provider'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/cn'
@@ -16,6 +17,9 @@ const navItems = [
 export const RootLayout = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const accessToken = useAppSelector((state) => state.auth.accessToken)
+  const { data: profile } = useGetProfileQuery(undefined, { skip: !accessToken })
+  const showNav = profile?.profile_completed === true
 
   const handleLogout = () => {
     dispatch(clearCredentials())
@@ -25,7 +29,7 @@ export const RootLayout = () => {
   return (
     <div className="flex min-h-screen bg-page">
       {/* Sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-border-subtle bg-surface lg:flex sticky top-0 h-screen overflow-hidden">
+      <aside className={cn('hidden w-60 shrink-0 flex-col border-r border-border-subtle bg-surface sticky top-0 h-screen overflow-hidden', showNav ? 'lg:flex' : 'lg:hidden')}>
         <div className="flex h-16 items-center border-b border-border-subtle px-5">
           <Link to="/" className="text-lg font-semibold text-text-primary">
             Sobeslife
@@ -62,7 +66,7 @@ export const RootLayout = () => {
 
       {/* Mobile header */}
       <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-border-subtle bg-surface/95 px-4 backdrop-blur lg:hidden">
+        <header className={cn('flex h-16 items-center justify-between border-b border-border-subtle bg-surface/95 px-4 backdrop-blur', showNav ? 'lg:hidden' : 'hidden')}>
           <Link to="/" className="text-lg font-semibold text-text-primary">
             Sobeslife
           </Link>
@@ -75,7 +79,7 @@ export const RootLayout = () => {
         </header>
 
         {/* Mobile bottom nav */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border-subtle bg-surface/95 backdrop-blur lg:hidden">
+        <nav className={cn('fixed bottom-0 left-0 right-0 z-40 flex border-t border-border-subtle bg-surface/95 backdrop-blur', showNav ? 'lg:hidden' : 'hidden')}>
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -94,7 +98,7 @@ export const RootLayout = () => {
           ))}
         </nav>
 
-        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:pb-6">
+        <main className={cn('flex-1 px-4 py-6 sm:px-6', showNav ? 'pb-24 lg:pb-6' : 'pb-6')}>
           <div className="mx-auto max-w-5xl">
             <Outlet />
           </div>
