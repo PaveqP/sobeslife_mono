@@ -11,16 +11,71 @@ export type AuthTokens = {
   refreshToken: string
 }
 
-export type SignInRequest = {
-  phone_number: string
-  password: string
+export type OTPSendRequest = {
+  email: string
 }
 
-export type SignUpRequest = {
-  nickname: string
+export type OTPVerifyRequest = {
   email: string
-  phone_number: string
-  password: string
+  code: string
+}
+
+export type GithubAuthUrlRequest = {
+  state: string
+  redirectUri: string
+}
+
+export type GithubAuthCallbackRequest = {
+  code: string
+  state: string
+  redirect_uri: string
+}
+
+export type GoogleAuthUrlRequest = {
+  state: string
+  codeChallenge: string
+  redirectUri: string
+}
+
+export type GoogleAuthCallbackRequest = {
+  code: string
+  code_verifier: string
+  redirect_uri: string
+  state?: string
+}
+
+export type UserProfile = {
+  user_id: number
+  nickname: string | null
+  first_name: string | null
+  last_name: string | null
+  profession_id: number | null
+  profession: string | null
+  grade: ExpertiseLevel | null
+  years_experience: number | null
+  github_url: string | null
+  linkedin_url: string | null
+  about: string | null
+  profile_completed: boolean
+}
+
+export type UpdateUserProfileRequest = {
+  profession?: string | null
+  grade?: string | null
+  nickname?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  years_experience?: number | null
+  github_url?: string | null
+  linkedin_url?: string | null
+  about?: string | null
+}
+
+export type TestsStatistics = {
+  total?: number
+  completed?: number
+  in_progress?: number
+  average_score?: number
 }
 
 export type TestListParams = {

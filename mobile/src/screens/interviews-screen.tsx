@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import type { AppScreenProps } from '../app/navigation-types'
+import type { InterviewsScreenProps } from '../app/navigation-types'
 import { useGetInterviewHistoryQuery, useStartInterviewMutation } from '../shared/api/interviews-api'
 import { useGetProfessionsQuery } from '../shared/api/tests-api'
 import type { ExpertiseLevel, InterviewHistoryItem } from '../shared/api/types'
@@ -25,7 +25,7 @@ const durationOptions = [
   { label: '60 минут', value: '60' },
 ]
 
-export const InterviewsScreen = ({ navigation }: AppScreenProps<'Interviews'>) => {
+export const InterviewsScreen = ({ navigation }: InterviewsScreenProps) => {
   const { theme } = useTheme()
   const { data: history = [], isLoading } = useGetInterviewHistoryQuery()
   const { data: professions = [] } = useGetProfessionsQuery()

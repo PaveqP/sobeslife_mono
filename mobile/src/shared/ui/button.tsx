@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ActivityIndicator, Pressable, Text, type StyleProp, StyleSheet, type ViewStyle } from 'react-native'
 import { useTheme } from '../theme/theme-provider'
 
@@ -7,6 +8,7 @@ type ButtonProps = {
   variant?: 'primary' | 'secondary' | 'ghost'
   loading?: boolean
   disabled?: boolean
+  icon?: ReactNode
   style?: StyleProp<ViewStyle>
 }
 
@@ -16,6 +18,7 @@ export const AppButton = ({
   variant = 'secondary',
   loading = false,
   disabled = false,
+  icon,
   style,
 }: ButtonProps) => {
   const { theme } = useTheme()
@@ -34,7 +37,7 @@ export const AppButton = ({
     },
     ghost: {
       backgroundColor: 'transparent',
-      borderColor: 'transparent',
+      borderColor: theme.colors.borderSubtle,
       textColor: theme.colors.textSecondary,
     },
   }[variant]
@@ -53,6 +56,7 @@ export const AppButton = ({
         style,
       ]}
     >
+      {!loading && icon}
       {loading ? <ActivityIndicator color={variantStyle.textColor} /> : null}
       <Text style={[styles.label, { color: variantStyle.textColor }]}>{title}</Text>
     </Pressable>

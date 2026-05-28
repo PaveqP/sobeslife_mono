@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import type { AppScreenProps } from '../app/navigation-types'
+import type { InterviewRunScreenProps } from '../app/navigation-types'
 import { useSendInterviewAnswerMutation, useCompleteInterviewMutation } from '../shared/api/interviews-api'
 import type { InterviewTurnResponse } from '../shared/api/types'
 import { AppButton } from '../shared/ui/button'
@@ -10,7 +10,7 @@ import { useTheme } from '../shared/theme/theme-provider'
 
 type Message = { role: 'assistant' | 'user'; content: string }
 
-export const InterviewRunScreen = ({ route, navigation }: AppScreenProps<'InterviewRun'>) => {
+export const InterviewRunScreen = ({ route, navigation }: InterviewRunScreenProps) => {
   const { interviewId, firstQuestion } = route.params
   const { theme } = useTheme()
 

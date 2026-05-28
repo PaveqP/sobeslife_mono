@@ -12,11 +12,11 @@ type Authorization interface {
 	GetProfile(userID string) (*utils.UserProfileResponse, error)
 	UpdateProfile(userID string, request utils.UpdateUserProfileRequest) (*utils.UserProfileResponse, error)
 	// Google OAuth
-	GenerateGoogleOauthRedirectURI(state string, codeChallenge string) string
-	AuthByGoogleWithCode(code string, codeVerifier string) (*utils.TokensPair, error)
+	GenerateGoogleOauthRedirectURI(state string, codeChallenge string, redirectURI string) (string, error)
+	AuthByGoogleWithCode(code string, codeVerifier string, redirectURI string) (*utils.TokensPair, error)
 	// GitHub OAuth
-	GenerateGithubOauthRedirectURI(state string) string
-	AuthByGithubWithCode(code string) (*utils.TokensPair, error)
+	GenerateGithubOauthRedirectURI(state string, redirectURI string) (string, error)
+	AuthByGithubWithCode(code string, redirectURI string) (*utils.TokensPair, error)
 	// Email OTP
 	SendOTP(ctx context.Context, email string) error
 	VerifyOTP(ctx context.Context, email, code string) (*utils.TokensPair, error)

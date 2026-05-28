@@ -2,14 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useCheckAnswerMutation, useCompleteTestMutation, useGetTestByIdQuery, useStartTestMutation } from '../shared/api/tests-api'
 import type { CompleteTestResponse, TestDetails, TestQuestion } from '../shared/api/types'
-import type { AppScreenProps } from '../app/navigation-types'
+import type { TestRunScreenProps } from '../app/navigation-types'
 import { AppButton } from '../shared/ui/button'
 import { AppTextInput } from '../shared/ui/form-controls'
 import { Badge, Card, EmptyState, FullScreenLoader } from '../shared/ui/surfaces'
 import { Screen } from '../shared/ui/screen'
 import { useTheme } from '../shared/theme/theme-provider'
 
-export const TestRunScreen = ({ route }: AppScreenProps<'TestRun'>) => {
+export const TestRunScreen = ({ route }: TestRunScreenProps) => {
   const { testId } = route.params
   const { data, isLoading, isFetching } = useGetTestByIdQuery(testId)
 

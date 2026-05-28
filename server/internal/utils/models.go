@@ -52,6 +52,7 @@ type Chapter struct {
 type GoogleCodeCallback struct {
 	Code         *string `json:"code"`
 	CodeVerifier *string `json:"code_verifier"`
+	RedirectURI  *string `json:"redirect_uri"`
 }
 
 type UserIdentity struct {
@@ -91,8 +92,9 @@ type OTPVerifyRequest struct {
 
 // GitHub OAuth
 type GithubCodeCallback struct {
-	Code  string `json:"code"`
-	State string `json:"state"`
+	Code        string  `json:"code"`
+	State       string  `json:"state"`
+	RedirectURI *string `json:"redirect_uri"`
 }
 
 type GithubUserEmail struct {

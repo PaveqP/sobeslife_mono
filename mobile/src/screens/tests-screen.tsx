@@ -1,16 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { signOut } from '../features/auth/auth-slice'
-import { useAppDispatch } from '../app/store'
-import type { AppScreenProps } from '../app/navigation-types'
+import type { TestsScreenProps } from '../app/navigation-types'
 import { useGetModulesQuery, useGetProfessionsQuery, useGetTechnologiesQuery, useGetTestsQuery, useStartTestMutation } from '../shared/api/tests-api'
 import type { ExpertiseLevel, TestListItem } from '../shared/api/types'
 import { AppButton } from '../shared/ui/button'
 import { AppSelect, AppTextInput } from '../shared/ui/form-controls'
 import { Badge, Card, EmptyState, Skeleton } from '../shared/ui/surfaces'
 import { Screen } from '../shared/ui/screen'
-import { ThemeToggle } from '../shared/ui/theme-toggle'
 import { useTheme } from '../shared/theme/theme-provider'
 
 const expertiseOptions: Array<{ label: string; value: ExpertiseLevel | '' }> = [
@@ -21,9 +18,8 @@ const expertiseOptions: Array<{ label: string; value: ExpertiseLevel | '' }> = [
   { label: 'Senior', value: 'senior' },
 ]
 
-export const TestsScreen = ({ navigation }: AppScreenProps<'Tests'>) => {
+export const TestsScreen = ({ navigation }: TestsScreenProps) => {
   const { theme } = useTheme()
-  const dispatch = useAppDispatch()
   const [filters, setFilters] = useState({
     title: '',
     profession: '',
@@ -69,18 +65,8 @@ export const TestsScreen = ({ navigation }: AppScreenProps<'Tests'>) => {
     }
   }
 
-  const handleLogout = () => {
-    void dispatch(signOut())
-  }
-
   return (
     <Screen>
-      <View style={styles.headerRow}>
-        <ThemeToggle />
-        <AppButton title="Собеседования" variant="ghost" onPress={() => navigation.navigate('Interviews')} />
-        <AppButton title="Выйти" variant="ghost" onPress={handleLogout} />
-      </View>
-
       <Card style={{ backgroundColor: theme.colors.surface }}>
         <View style={styles.hero}>
           <View style={[styles.inlineChip, { backgroundColor: theme.colors.accentSoft }]}>

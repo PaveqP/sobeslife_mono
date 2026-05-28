@@ -7,3 +7,10 @@ const fallbackApiUrl = Platform.select({
 })
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? fallbackApiUrl
+
+/** Должны совпадать с OAUTH_*_REDIRECT_URI на бэкенде (как у web). */
+export const OAUTH_GOOGLE_REDIRECT_URI =
+  process.env.EXPO_PUBLIC_OAUTH_GOOGLE_REDIRECT_URI ?? 'http://localhost:5173/auth/google'
+
+export const OAUTH_GITHUB_REDIRECT_URI =
+  process.env.EXPO_PUBLIC_OAUTH_GITHUB_REDIRECT_URI ?? 'http://localhost:5173/auth/github'

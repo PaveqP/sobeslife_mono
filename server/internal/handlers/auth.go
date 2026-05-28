@@ -60,7 +60,19 @@ func (h *Handler) otpVerify(c *gin.Context) {
 // --- Google OAuth ---
 
 func (h *Handler) googleUrl(c *gin.Context) {
-	response := h.services.Authorization.GenerateGoogleOauthRedirectURI(c.Query("state"), c.Query("code_challenge"))
+	response, err := h.services.Authorization.GenerateGoogleOauthRedirectURI(
+		c.Query("state"),
+		c.Query("code_challenge"),
+		c.Query("redirect_uri"),
+	)
+	if err != nil {
+		if err == services.ErrInvalidRedirectURI {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, response)
 }
 
@@ -82,9 +94,17 @@ func (h *Handler) googleCallback(c *gin.Context) {
 		codeVerifier = strings.TrimSpace(*code.CodeVerifier)
 	}
 
-	resp, err := h.services.Authorization.AuthByGoogleWithCode(strings.TrimSpace(*code.Code), codeVerifier)
+	redirectURI := ""
+	if code.RedirectURI != nil {
+		redirectURI = strings.TrimSpace(*code.RedirectURI)
+	}
 
+	resp, err := h.services.Authorization.AuthByGoogleWithCode(strings.TrimSpace(*code.Code), codeVerifier, redirectURI)
 	if err != nil {
+		if err == services.ErrInvalidRedirectURI {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		logrus.Errorf("Error: %s", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
@@ -96,7 +116,15 @@ func (h *Handler) googleCallback(c *gin.Context) {
 // --- GitHub OAuth ---
 
 func (h *Handler) githubUrl(c *gin.Context) {
-	response := h.services.Authorization.GenerateGithubOauthRedirectURI(c.Query("state"))
+	response, err := h.services.Authorization.GenerateGithubOauthRedirectURI(c.Query("state"), c.Query("redirect_uri"))
+	if err != nil {
+		if err == services.ErrInvalidRedirectURI {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, response)
 }
 
@@ -112,8 +140,17 @@ func (h *Handler) githubCallback(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.services.Authorization.AuthByGithubWithCode(strings.TrimSpace(req.Code))
+	redirectURI := ""
+	if req.RedirectURI != nil {
+		redirectURI = strings.TrimSpace(*req.RedirectURI)
+	}
+
+	resp, err := h.services.Authorization.AuthByGithubWithCode(strings.TrimSpace(req.Code), redirectURI)
 	if err != nil {
+		if err == services.ErrInvalidRedirectURI {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		logrus.Errorf("GitHub auth error: %s", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

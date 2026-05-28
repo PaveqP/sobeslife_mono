@@ -29,6 +29,7 @@ var (
 	ErrGithubEmailMissing      = errors.New("github account email is missing or not verified")
 	ErrOTPExpired              = errors.New("OTP code expired or not found")
 	ErrOTPInvalid              = errors.New("invalid OTP code")
+	ErrInvalidRedirectURI      = errors.New("redirect_uri is not allowed")
 )
 
 type AuthService struct {
@@ -143,12 +144,17 @@ func generateOTPCode() (string, error) {
 
 // --- Google OAuth ---
 
-func (as *AuthService) GenerateGoogleOauthRedirectURI(state string, codeChallenge string) string {
+func (as *AuthService) GenerateGoogleOauthRedirectURI(state string, codeChallenge string, requestedRedirectURI string) (string, error) {
+	resolved, err := resolveGoogleRedirectURI(requestedRedirectURI)
+	if err != nil {
+		return "", err
+	}
+
 	baseURL := "https://accounts.google.com/o/oauth2/v2/auth"
 
 	queryParams := url.Values{}
 	queryParams.Add("client_id", utils.GetEnv("OAUTH_GOOGLE_CLIENT_ID"))
-	queryParams.Add("redirect_uri", getGoogleRedirectURI())
+	queryParams.Add("redirect_uri", resolved)
 	queryParams.Add("response_type", "code")
 	queryParams.Add("scope", "openid email")
 	queryParams.Add("prompt", "select_account")
@@ -160,11 +166,16 @@ func (as *AuthService) GenerateGoogleOauthRedirectURI(state string, codeChalleng
 		queryParams.Add("code_challenge_method", "S256")
 	}
 
-	return baseURL + "?" + queryParams.Encode()
+	return baseURL + "?" + queryParams.Encode(), nil
 }
 
-func (as *AuthService) AuthByGoogleWithCode(code string, codeVerifier string) (*utils.TokensPair, error) {
-	tokenResp, err := as.exchangeGoogleCode(code, codeVerifier)
+func (as *AuthService) AuthByGoogleWithCode(code string, codeVerifier string, requestedRedirectURI string) (*utils.TokensPair, error) {
+	resolved, err := resolveGoogleRedirectURI(requestedRedirectURI)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenResp, err := as.exchangeGoogleCode(code, codeVerifier, resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -200,12 +211,12 @@ func (as *AuthService) AuthByGoogleWithCode(code string, codeVerifier string) (*
 	return as.hs.GeneratedTokensPair(userID, utils.AudienceWeb)
 }
 
-func (as *AuthService) exchangeGoogleCode(code string, codeVerifier string) (*utils.GoogleTokenResponse, error) {
+func (as *AuthService) exchangeGoogleCode(code string, codeVerifier string, redirectURI string) (*utils.GoogleTokenResponse, error) {
 	data := url.Values{}
 	data.Set("client_id", utils.GetEnv("OAUTH_GOOGLE_CLIENT_ID"))
 	data.Set("client_secret", utils.GetEnv("OAUTH_GOOGLE_CLIENT_SECRET"))
 	data.Set("grant_type", "authorization_code")
-	data.Set("redirect_uri", getGoogleRedirectURI())
+	data.Set("redirect_uri", redirectURI)
 	data.Set("code", code)
 	if codeVerifier != "" {
 		data.Set("code_verifier", codeVerifier)
@@ -276,19 +287,29 @@ func (as *AuthService) fetchGoogleUserInfo(accessToken string) (*utils.GoogleUse
 
 // --- GitHub OAuth ---
 
-func (as *AuthService) GenerateGithubOauthRedirectURI(state string) string {
+func (as *AuthService) GenerateGithubOauthRedirectURI(state string, requestedRedirectURI string) (string, error) {
+	resolved, err := resolveGithubRedirectURI(requestedRedirectURI)
+	if err != nil {
+		return "", err
+	}
+
 	queryParams := url.Values{}
 	queryParams.Add("client_id", utils.GetEnv("OAUTH_GITHUB_CLIENT_ID"))
-	queryParams.Add("redirect_uri", getGithubRedirectURI())
+	queryParams.Add("redirect_uri", resolved)
 	queryParams.Add("scope", "user:email")
 	if state != "" {
 		queryParams.Add("state", state)
 	}
-	return "https://github.com/login/oauth/authorize?" + queryParams.Encode()
+	return "https://github.com/login/oauth/authorize?" + queryParams.Encode(), nil
 }
 
-func (as *AuthService) AuthByGithubWithCode(code string) (*utils.TokensPair, error) {
-	accessToken, err := as.exchangeGithubCode(code)
+func (as *AuthService) AuthByGithubWithCode(code string, requestedRedirectURI string) (*utils.TokensPair, error) {
+	resolved, err := resolveGithubRedirectURI(requestedRedirectURI)
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := as.exchangeGithubCode(code, resolved)
 	if err != nil {
 		return nil, err
 	}
@@ -320,11 +341,11 @@ func (as *AuthService) AuthByGithubWithCode(code string) (*utils.TokensPair, err
 	return as.hs.GeneratedTokensPair(userID, utils.AudienceWeb)
 }
 
-func (as *AuthService) exchangeGithubCode(code string) (string, error) {
+func (as *AuthService) exchangeGithubCode(code string, redirectURI string) (string, error) {
 	data := url.Values{}
 	data.Set("client_id", utils.GetEnv("OAUTH_GITHUB_CLIENT_ID"))
 	data.Set("client_secret", utils.GetEnv("OAUTH_GITHUB_CLIENT_SECRET"))
-	data.Set("redirect_uri", getGithubRedirectURI())
+	data.Set("redirect_uri", redirectURI)
 	data.Set("code", code)
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -534,6 +555,58 @@ func getGithubRedirectURI() string {
 		return "http://localhost:5173/auth/github"
 	}
 	return redirectURI
+}
+
+func googleRedirectAllowlist() []string {
+	uris := []string{getGoogleRedirectURI()}
+	if mobile := strings.TrimSpace(utils.GetEnv("OAUTH_MOBILE_GOOGLE_REDIRECT_URI")); mobile != "" {
+		uris = append(uris, mobile)
+	}
+	return uris
+}
+
+func githubRedirectAllowlist() []string {
+	uris := []string{getGithubRedirectURI()}
+	if mobile := strings.TrimSpace(utils.GetEnv("OAUTH_MOBILE_GITHUB_REDIRECT_URI")); mobile != "" {
+		uris = append(uris, mobile)
+	}
+	return uris
+}
+
+func isAllowedRedirectURI(requested string, allowlist []string) bool {
+	requested = strings.TrimSpace(requested)
+	if requested == "" {
+		return false
+	}
+	for _, allowed := range allowlist {
+		if requested == allowed {
+			return true
+		}
+	}
+	// Expo Go uses dynamic exp:// redirect URIs during local development.
+	return strings.HasPrefix(requested, "exp://")
+}
+
+func resolveGoogleRedirectURI(requested string) (string, error) {
+	requested = strings.TrimSpace(requested)
+	if requested == "" {
+		return getGoogleRedirectURI(), nil
+	}
+	if !isAllowedRedirectURI(requested, googleRedirectAllowlist()) {
+		return "", ErrInvalidRedirectURI
+	}
+	return requested, nil
+}
+
+func resolveGithubRedirectURI(requested string) (string, error) {
+	requested = strings.TrimSpace(requested)
+	if requested == "" {
+		return getGithubRedirectURI(), nil
+	}
+	if !isAllowedRedirectURI(requested, githubRedirectAllowlist()) {
+		return "", ErrInvalidRedirectURI
+	}
+	return requested, nil
 }
 
 func deriveNicknameFromEmail(email string) string {

@@ -4,13 +4,9 @@ import { useEffect } from 'react'
 import { bootstrapSession } from '../features/auth/auth-slice'
 import { useAppDispatch, useAppSelector } from './store'
 import { SignInScreen } from '../screens/sign-in-screen'
-import { SignUpScreen } from '../screens/sign-up-screen'
-import { TestsScreen } from '../screens/tests-screen'
-import { TestRunScreen } from '../screens/test-run-screen'
-import { InterviewsScreen } from '../screens/interviews-screen'
-import { InterviewRunScreen } from '../screens/interview-run-screen'
 import { useTheme } from '../shared/theme/theme-provider'
 import { FullScreenLoader } from '../shared/ui/surfaces'
+import { MainTabs } from './main-tabs'
 import type { RootStackParamList } from './navigation-types'
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -55,24 +51,9 @@ export const AppNavigation = () => {
         }}
       >
         {!accessToken ? (
-          <>
-            <Stack.Screen name="SignIn" component={SignInScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="SignUp" component={SignUpScreen} options={{ title: 'Регистрация' }} />
-          </>
+          <Stack.Screen name="SignIn" component={SignInScreen} options={{ headerShown: false }} />
         ) : (
-          <>
-            <Stack.Screen
-              name="Tests"
-              component={TestsScreen}
-              options={{
-                title: 'Sobeslife',
-                headerRight: () => null,
-              }}
-            />
-            <Stack.Screen name="TestRun" component={TestRunScreen} options={{ title: 'Прохождение теста' }} />
-            <Stack.Screen name="Interviews" component={InterviewsScreen} options={{ title: 'Собеседования' }} />
-            <Stack.Screen name="InterviewRun" component={InterviewRunScreen} options={{ title: 'AI-собеседование' }} />
-          </>
+          <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
